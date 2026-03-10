@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniSense | AI Accessibility Agent</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div id="alert-overlay" class="alert-overlay"></div>
+    <div class="mesh-background"></div>
+
+    <div id="visual-alert-box" class="visual-alert-box">
+        <div class="visual-alert-title">Sound Detected</div>
+        <div id="visual-alert-msg" class="visual-alert-msg">DOORBELL</div>
+    </div>
+
+    <div class="container">
+        <header>
+            <img src="/static/visionguide_logo.png" alt="OmniSense Logo" class="app-logo">
+            <h1>OmniSense</h1>
+            <div class="safety-status-bar">
+                <div class="safety-shield">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"></path>
+                    </svg>
+                </div>
+                <span>Safety Monitor:</span>
+                <span id="safety-status" class="status-badge">Active</span>
+            </div>
+            <div class="mode-selector">
+                <button class="mode-tab active" onclick="switchMode('vision')">Vision Mode</button>
+                <button id="audio-tab-btn" class="mode-tab" onclick="switchMode('audio')">Audio Mode</button>
+            </div>
+    </div>
+
+    <main>
+        <div id="error-message" class="error-card" style="display:none"></div>
+
+        <!-- VISION MODE CONTENT -->
+        <div id="vision-content" class="mode-content active">
+            <div class="camera-preview">
+                <video id="video" autoplay playsinline muted></video>
+                <canvas id="canvas" style="display:none"></canvas>
+                <div id="camera-overlay" class="overlay">
+                    <p>Initializing camera...</p>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn-secondary" onclick="document.getElementById('fileInput').click()">
+                    <span>📁</span> Upload
+                </button>
+                <button id="capture-btn" class="btn-primary" disabled>
+                    <span>📷</span> Capture Scene
+                </button>
+                <button id="voice-cmd-btn" class="btn-voice" title="Tap to give a voice command">
+                    <span>🎙️</span> Voice Command
+                </button>
+                <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)">
+            </div>
+
+            <div id="voice-status" class="voice-status-bar" style="display:none">
+                <span class="voice-dot"></span>
+                <span id="voice-status-text">Listening for command...</span>
+            </div>
+
+            <section class="info-section">
+                <h3>Voice Commands</h3>
+                <p>Say: <strong>"Where am I?"</strong> — Get location context</p>
+                <p>Say: <strong>"Guide me"</strong> — Navigation instructions</p>
+                <p>Say: <strong>"Describe"</strong> — Full scene description</p>
+                <p>Say: <strong>"Capture"</strong> — Quick scene capture</p>
+                <p>Or tap <strong>Voice Command</strong> for hands-free interaction.</p>
+            </section>
+        </div>
+
+        <!-- AUDIO MODE CONTENT -->
+        <div id="audio-content" class="mode-content">
+            <div class="audio-hub">
+                <div id="mic-viz" class="mic-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                </div>
+                <div id="audio-status-text" class="audio-status">Environmental Listener</div>
+                <div class="audio-sub">Tap 'Listen' to analyze sounds</div>
+            </div>
+
+            <div class="controls">
+                <button id="audio-btn" class="btn-primary" disabled>
+                    <span>🎤</span> Start Listening
+                </button>
+            </div>
+
+            <section class="info-section">
+                <h3>Using Audio Mode</h3>
+                <p>1. Ensure your microphone is clear.</p>
+                <p>2. Tap <strong>Start Listening</strong> (starts a 3s capture).</p>
+                <p>3. AI will identify sirens, bells, or voices nearby.</p>
+            </section>
+        </div>
+
+        <div id="results-area">
+            <!-- Results will be injected here -->
+        </div>
+
+        <div id="loading" class="loading">
+            <span class="pulse"></span>
+            Analyzing...
+        </div>
+
+        <div class="sos-container">
+            <div id="sos-btn" class="sos-btn">SOS</div>
+        </div>
+    </main>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const resultsArea = document.getElementById('results-area');
+        const captureBtn = document.getElementById('capture-btn');
+        const audioBtn = document.getElementById('audio-btn');
+        const micViz = document.getElementById('mic-viz');
+        const audioStatusText = document.getElementById('audio-status-text');
+        const errorCard = document.getElementById('error-message');
+        const overlay = document.getElementById('camera-overlay');
+        const alertOverlay = document.getElementById('alert-overlay');
+        const loadingBox = document.getElementById('loading');
+
+        const sosBtn = document.getElementById('sos-btn');
+        const safetyStatus = document.getElementById('safety-status');
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let currentMode = 'vision';
+        let cameraStream = null;
+        let micStream = null;
+        let sosTimer = null;
+        let voiceRecognition = null;
+        let currentVoiceQuery = 'Describe my surroundings.';
+        let isListeningForCommand = false;
+
+        function showError(msg) {
+            errorCard.textContent = msg;
+            errorCard.style.display = 'block';
+            setTimeout(() => { errorCard.style.display = 'none'; }, 5000);
+        }
+
+        // SOS Functionality
+        sosBtn.addEventListener('mousedown', startSOSTimer);
+        sosBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startSOSTimer(); });
+        window.addEventListener('mouseup', cancelSOSTimer);
+        window.addEventListener('touchend', cancelSOSTimer);
+
+        function startSOSTimer() {
+            sosBtn.classList.add('triggering');
+            const speech = new SpeechSynthesisUtterance("Holding SOS. Keep pressing to alert emergency contacts.");
+            window.speechSynthesis.speak(speech);
+
+            sosTimer = setTimeout(() => {
+                sosBtn.classList.remove('triggering');
+                alert("SOS TRIGGERED! Emergency contacts would be notified of your location.");
+                const triggeredSpeech = new SpeechSynthesisUtterance("SOS Triggered. Emergency protocol initiated.");
+                window.speechSynthesis.speak(triggeredSpeech);
+            }, 3000); // 3 second hold
+        }
+
+        function cancelSOSTimer() {
+            if (sosTimer) {
+                clearTimeout(sosTimer);
+                sosTimer = null;
+                sosBtn.classList.remove('triggering');
+            }
+        }
+
+        function updateSafetyStatus(level) {
+            safetyStatus.textContent = level;
+            const shield = document.querySelector('.safety-shield');
+
+            if (level === 'Critical') {
+                safetyStatus.style.color = '#ef4444';
+                safetyStatus.parentElement.style.background = 'rgba(239, 68, 68, 0.1)';
+                shield.style.color = '#ef4444';
+            } else if (level === 'Caution') {
+                safetyStatus.style.color = '#fbbf24';
+                safetyStatus.parentElement.style.background = 'rgba(251, 191, 36, 0.1)';
+                shield.style.color = '#fbbf24';
+            } else {
+                safetyStatus.style.color = '#4ade80';
+                safetyStatus.parentElement.style.background = 'rgba(74, 222, 128, 0.1)';
+                shield.style.color = '#4ade80';
+            }
+        }
+
+        // Mode Switching
+        function switchMode(mode) {
+            currentMode = mode;
+            resultsArea.innerHTML = '';
+
+            // Update tabs
+            document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.mode-selector button[onclick="switchMode('${mode}')"]`).classList.add('active');
+
+            // Update content visibility
+            document.getElementById('vision-content').classList.remove('active');
+            document.getElementById('audio-content').classList.remove('active');
+            document.getElementById(`${mode}-content`).classList.add('active');
+
+            // Enable/disable buttons based on mode and stream status
+            if (mode === 'vision') {
+                captureBtn.disabled = !cameraStream;
+                audioBtn.disabled = true;
+                // Start voice commands in vision mode
+                startVoiceCommands();
+            } else if (mode === 'audio') {
+                captureBtn.disabled = true;
+                audioBtn.disabled = !micStream;
+                // Stop voice commands when not in vision mode
+                stopVoiceCommands();
+            }
+
+            // Speak mode change
+            const utterance = new SpeechSynthesisUtterance(`Switched to ${mode} mode.`);
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Trigger Visual and Haptic Alerts
+        function triggerAlerts(safetyLevel) {
+            // This was previously controlled by a checkbox, now it's always active if safety_level is provided
+            // if (!hearingMode.checked) return;
+
+            alertOverlay.className = 'alert-overlay';
+
+            if (safetyLevel === 'Critical') {
+                alertOverlay.classList.add('alert-critical');
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            } else if (safetyLevel === 'Caution') {
+                alertOverlay.classList.add('alert-caution');
+                if (navigator.vibrate) navigator.vibrate(100);
+            }
+
+            setTimeout(() => {
+                alertOverlay.className = 'alert-overlay';
+            }, 3000);
+        }
+
+        // Slow-Flashing Visual Notification for Deaf Users
+        function triggerVisualNotification(message) {
+            const box = document.getElementById('visual-alert-box');
+            const msgEl = document.getElementById('visual-alert-msg');
+            msgEl.textContent = message.toUpperCase();
+            box.classList.add('active');
+
+            // Allow user enough time to read (5 seconds)
+            setTimeout(() => {
+                box.classList.remove('active');
+            }, 5000);
+        }
+
+        // ─── Voice Command Engine ───────────────────────────────────────────
+        const voiceStatusBar = document.getElementById('voice-status');
+        const voiceStatusText = document.getElementById('voice-status-text');
+        const voiceCmdBtn = document.getElementById('voice-cmd-btn');
+
+        const COMMAND_MAP = [
+            { patterns: ['where am i', 'where are we', 'what is this place', 'location', 'where'], query: 'Where am I? Describe the location and environment type in detail.' },
+            { patterns: ['guide me', 'navigate', 'navigation', 'how do i get', 'which way', 'direction', 'path forward', 'safe path'], query: 'Guide me on navigation. Describe the path ahead, any obstacles, and give step-by-step directional instructions.' },
+            { patterns: ['is it safe', 'any danger', 'any obstacle', 'hazard', 'obstacle', 'danger'], query: 'Identify all hazards, obstacles, and dangers in detail.' },
+            { patterns: ['describe', 'what do you see', 'look around', 'tell me', 'what is around me'], query: 'Describe my full surroundings in detail.' },
+            { patterns: ['capture', 'take a picture', 'take photo', 'analyze', 'scan'], query: 'Describe my surroundings.' },
+            { patterns: ['read', 'what does it say', 'text', 'sign', 'label'], query: 'Read all visible text, signs, and labels in this image.' },
+        ];
+
+        function matchVoiceCommand(transcript) {
+            const lower = transcript.toLowerCase();
+            for (const cmd of COMMAND_MAP) {
+                if (cmd.patterns.some(p => lower.includes(p))) {
+                    return cmd.query;
+                }
+            }
+            // Fall back to treating the whole transcript as the query
+            if (lower.trim().length > 2) return transcript;
+            return null;
+        }
+
+        function startVoiceCommands() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                console.warn('Speech recognition not supported in this browser.');
+                return;
+            }
+            if (voiceRecognition) return; // already running
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            voiceRecognition = new SpeechRecognition();
+            voiceRecognition.continuous = true;
+            voiceRecognition.interimResults = false;
+            voiceRecognition.lang = 'en-US';
+
+            voiceRecognition.onstart = () => {
+                voiceStatusBar.style.display = 'flex';
+                voiceStatusText.textContent = 'Listening for commands...';
+                isListeningForCommand = true;
+            };
+
+            voiceRecognition.onresult = (event) => {
+                const last = event.results.length - 1;
+                const transcript = event.results[last][0].transcript.trim();
+                console.log('Voice command heard:', transcript);
+                voiceStatusText.textContent = `Heard: "${transcript}"`;
+
+                const query = matchVoiceCommand(transcript);
+                if (query && cameraStream && !captureBtn.disabled) {
+                    currentVoiceQuery = query;
+                    // Brief pause so TTS doesn't overlap
+                    window.speechSynthesis.cancel();
+                    const ack = new SpeechSynthesisUtterance('Got it, analyzing...');
+                    ack.rate = 1.2;
+                    window.speechSynthesis.speak(ack);
+                    setTimeout(() => captureAndAnalyze(), 600);
+                }
+            };
+
+            voiceRecognition.onerror = (e) => {
+                if (e.error !== 'no-speech') console.warn('Voice recognition error:', e.error);
+            };
+
+            voiceRecognition.onend = () => {
+                // Auto-restart if still in vision mode
+                if (currentMode === 'vision' && voiceRecognition) {
+                    try { voiceRecognition.start(); } catch (_) { }
+                }
+            };
+
+            try { voiceRecognition.start(); } catch (e) { console.warn('Could not start recognition:', e); }
+        }
+
+        function stopVoiceCommands() {
+            if (voiceRecognition) {
+                voiceRecognition.onend = null; // prevent auto-restart
+                voiceRecognition.stop();
+                voiceRecognition = null;
+            }
+            voiceStatusBar.style.display = 'none';
+            isListeningForCommand = false;
+        }
+
+        // Voice Command button: tap to immediately listen for one command
+        voiceCmdBtn.addEventListener('click', () => {
+            if (!cameraStream) {
+                showError('Camera not ready. Please allow camera access first.');
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const prompt = new SpeechSynthesisUtterance('What would you like to know?');
+            window.speechSynthesis.speak(prompt);
+            voiceStatusText.textContent = 'What would you like to know?';
+            voiceStatusBar.style.display = 'flex';
+        });
+
+
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" },
+                    audio: false
+                });
+                cameraStream = stream;
+                video.srcObject = stream;
+                overlay.style.display = 'none';
+
+                if (currentMode === 'vision') {
+                    captureBtn.disabled = false;
+                    startVoiceCommands();
+                }
+            } catch (err) {
+                console.error("Camera access error:", err);
+                overlay.innerHTML = `<p style="color: #fb7185">Camera access denied. Check permissions.</p>`;
+                captureBtn.disabled = true;
+            }
+        }
+
+        async function initAudio() {
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+
+                // Enable audio button if we're already in audio mode
+                if (currentMode === 'audio') {
+                    audioBtn.disabled = false;
+                }
+
+                // Setup Audio Recording - Prefer WebM for Gemini compatibility
+                const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                    ? 'audio/webm;codecs=opus'
+                    : MediaRecorder.isTypeSupported('audio/webm')
+                        ? 'audio/webm'
+                        : 'audio/ogg';
+                mediaRecorder = new MediaRecorder(micStream, { mimeType });
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) audioChunks.push(event.data);
+                };
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+                    audioChunks = [];
+                    await processAudioAnalysis(audioBlob);
+                };
+
+                console.log('Microphone initialized, mimeType:', mimeType);
+            } catch (err) {
+                console.error("Microphone access error:", err);
+                audioBtn.disabled = true;
+                audioStatusText.textContent = 'Mic access denied';
+            }
+        }
+
+        async function processAudioAnalysis(blob) {
+            audioBtn.disabled = true;
+            micViz.classList.remove('active');
+            audioStatusText.textContent = 'Processing...';
+            loadingBox.classList.add('active');
+            loadingBox.textContent = 'Analyzing sounds...';
+            resultsArea.innerHTML = '';
+
+            const formData = new FormData();
+            formData.append('file', blob, 'audio.wav');
+
+            try {
+                const response = await fetch('/analyze_audio', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Audio analysis failed');
+                }
+                const result = await response.json();
+
+                resultsArea.innerHTML = `
+                    <div class="result-card" style="border-left: 4px solid var(--primary)">
+                        <div class="result-label">ENVIRONMENTAL AUDIO</div>
+                        <div class="result-text">${result.sound_event}</div>
+                        <div class="result-label" style="margin-top:1rem">URGENCY: ${result.urgency}</div>
+                        <div class="result-text">${result.guidance}</div>
+                    </div>
+                `;
+
+                // Update Safety Status
+                if (result.urgency) {
+                    updateSafetyStatus(result.urgency);
+                }
+
+                // Trigger visual alert for significant sounds
+                if (result.urgency === 'Critical' || result.urgency === 'Caution') {
+                    triggerVisualNotification(result.sound_event);
+                }
+
+                const speech = new SpeechSynthesisUtterance(result.guidance);
+                window.speechSynthesis.speak(speech);
+
+            } catch (err) {
+                console.error("Fetch error:", err);
+                showError("Audio processing error.");
+                const utterance = new SpeechSynthesisUtterance("I'm sorry, I couldn't process that sound. Please try again.");
+                window.speechSynthesis.speak(utterance);
+            } finally {
+                audioBtn.disabled = false;
+                audioBtn.textContent = 'Start Listening';
+                audioStatusText.textContent = 'Environmental Listener';
+                loadingBox.classList.remove('active');
+                loadingBox.textContent = 'Analyzing...';
+            }
+        }
+
+        async function processAnalysis(blob) {
+            captureBtn.disabled = true;
+            captureBtn.textContent = 'Analyzing...';
+            loadingBox.classList.add('active');
+            loadingBox.textContent = 'Analyzing scene...';
+            resultsArea.innerHTML = '';
+
+            const formData = new FormData();
+            formData.append('file', blob, 'capture.jpg');
+            formData.append('query', currentVoiceQuery);
+            currentVoiceQuery = 'Describe my surroundings.'; // reset after use
+
+            try {
+                const response = await fetch('/analyze_scene', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Analysis failed');
+                }
+                const result = await response.json();
+
+                resultsArea.innerHTML = `
+                    <div class="result-card">
+                        <div class="result-label">SCENE DESCRIPTION</div>
+                        <div class="result-text">${result.scene}</div>
+                        <div class="result-label" style="margin-top:1rem">HAZARDS</div>
+                        <div class="result-text">${result.hazard}</div>
+                        <div class="result-label" style="margin-top:1rem">GUIDANCE</div>
+                        <div class="result-text">${result.guidance}</div>
+                    </div>
+                `;
+
+                // Update Safety Status
+                updateSafetyStatus(result.safety_level);
+
+                const speech = new SpeechSynthesisUtterance(`${result.guidance}`);
+                speech.rate = 0.95;
+                window.speechSynthesis.speak(speech);
+                triggerAlerts(result.safety_level);
+
+            } catch (err) {
+                console.error("Fetch error:", err);
+                showError("Communication error. Please try again.");
+                const utterance = new SpeechSynthesisUtterance("I'm sorry, I couldn't process that scene. Please try again.");
+                window.speechSynthesis.speak(utterance);
+            } finally {
+                captureBtn.disabled = false;
+                captureBtn.textContent = 'Capture Scene';
+                loadingBox.classList.remove('active');
+                loadingBox.textContent = 'Analyzing...';
+            }
+        }
+
+        async function captureAndAnalyze() {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(processAnalysis, 'image/jpeg', 0.8);
+        }
+
+        function handleAudioListen() {
+            audioChunks = [];
+            mediaRecorder.start();
+            audioBtn.textContent = 'Listening...';
+            audioStatusText.textContent = 'I am listening...';
+            micViz.classList.add('active');
+
+            setTimeout(() => {
+                if (mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                    audioBtn.textContent = 'Analyzing...';
+                }
+            }, 3000);
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) processAnalysis(file);
+        }
+
+        captureBtn.addEventListener('click', captureAndAnalyze);
+        audioBtn.addEventListener('click', handleAudioListen);
+        initCamera();
+        initAudio();
+    </script>
+</body>
+
+</html>
