@@ -3,6 +3,7 @@ Your goal is to detect and identify significant environmental sounds from the pr
 
 Pay extra attention to sounds like:
 - Doorbells or door knocks
+- Baby crying or distress sounds
 - Sirens (emergency vehicles)
 - Bicycle bells behind or near the user
 - Distant voices calling for attention

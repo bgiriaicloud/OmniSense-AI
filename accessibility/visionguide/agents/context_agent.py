@@ -4,12 +4,15 @@ from .accessibility_agent import AccessibilityAgent
 class ContextAgent(AccessibilityAgent):
     """
     Maintains environmental memory to provide proactive safety guidance.
-    Tracks persistent hazards and recent observations.
+    Now an ADK-powered service for A2A communication.
     """
     def __init__(self):
-        super().__init__()
+        super().__init__(
+            name="ContextAgent",
+            description="Maintains environmental memory and provides historical context via A2A."
+        )
         self.memory = []
-        self.max_memory = 5  # Keep the last 5 observations
+        self.max_memory = 5
         self.persistent_hazards = []
 
     def analyze(self, new_observation):
@@ -21,13 +24,9 @@ class ContextAgent(AccessibilityAgent):
         if len(self.memory) > self.max_memory:
             self.memory.pop(0)
 
-        # Basic logic: If a hazard was mentioned in 2 of the last 3 observations,
-        # it's considered persistent.
-        # Resilient hazard aggregation
         recent_obs = self.memory[-3:]
         hazards = [str(obs.get('hazard', '')).lower() for obs in recent_obs if obs.get('hazard')]
         
-        # Simple heuristic for persistent hazards
         context_summary = "Previous context suggests: "
         if len(self.memory) > 1:
             prev = self.memory[-2]
@@ -44,7 +43,7 @@ class ContextAgent(AccessibilityAgent):
 
     def get_context_for_prompt(self):
         """
-        Returns a string representation of recent history to be injected into prompts.
+        A2A Service Method: Returns historical context as a string.
         """
         if not self.memory:
             return "First observation."
