@@ -1,0 +1,23 @@
+{
+    "id": "urn:uuid:visionguide-audio-agent",
+    "name": "AudioAgent",
+    "version": "1.0.0",
+    "protocol": "A2A/0.3",
+    "endpoint": "http://localhost:8000/audio/rpc",
+    "skills": [
+        {
+            "id": "monitor_ambient",
+            "schema": {
+                "input": "audio/webm",
+                "output": "application/json"
+            }
+        },
+        {
+            "id": "detect_alerts",
+            "schema": {
+                "input": "audio/webm",
+                "output": "application/json"
+            }
+        }
+    ]
+}

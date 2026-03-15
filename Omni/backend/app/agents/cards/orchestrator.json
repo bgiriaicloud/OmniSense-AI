@@ -1,0 +1,23 @@
+{
+    "id": "urn:uuid:visionguide-orchestrator",
+    "name": "Orchestrator",
+    "version": "1.0.0",
+    "protocol": "A2A/0.3",
+    "endpoint": "http://localhost:8000/orchestrator/rpc",
+    "skills": [
+        {
+            "id": "route_message",
+            "schema": {
+                "input": "application/json",
+                "output": "application/json"
+            }
+        },
+        {
+            "id": "merge_context",
+            "schema": {
+                "input": "application/json",
+                "output": "application/json"
+            }
+        }
+    ]
+}

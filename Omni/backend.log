@@ -1,0 +1,10 @@
+INFO:     Started server process [7601]
+INFO:     Waiting for application startup.
+INFO  visionguide.main  Initializing VisionGuide agents…
+INFO  visionguide.a2a  [VisionAgent] Gemini client ready (model=gemini-3-flash-preview)
+INFO  visionguide.a2a  [AudioAgent] Gemini client ready (model=gemini-3-flash-preview)
+INFO  visionguide.a2a  [NavAgent] Gemini client ready (model=gemini-3-flash-preview)
+INFO  visionguide.a2a  [Orchestrator] Gemini client ready (model=gemini-3-flash-preview)
+INFO  visionguide.main  All agents online.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)

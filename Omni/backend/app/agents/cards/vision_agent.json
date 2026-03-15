@@ -1,0 +1,23 @@
+{
+    "id": "urn:uuid:visionguide-vision-agent",
+    "name": "VisionAgent",
+    "version": "1.0.0",
+    "protocol": "A2A/0.3",
+    "endpoint": "http://localhost:8000/vision/rpc",
+    "skills": [
+        {
+            "id": "analyze_frame",
+            "schema": {
+                "input": "image/jpeg",
+                "output": "application/json"
+            }
+        },
+        {
+            "id": "detect_hazards",
+            "schema": {
+                "input": "image/jpeg",
+                "output": "application/json"
+            }
+        }
+    ]
+}

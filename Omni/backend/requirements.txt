@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+python-multipart
+pillow
+google-genai>=1.0.0
+google-adk>=1.0.0
+httpx

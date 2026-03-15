@@ -1,0 +1,23 @@
+{
+    "id": "urn:uuid:visionguide-nav-agent",
+    "name": "NavAgent",
+    "version": "1.0.0",
+    "protocol": "A2A/0.3",
+    "endpoint": "http://localhost:8000/nav/rpc",
+    "skills": [
+        {
+            "id": "calculate_heading",
+            "schema": {
+                "input": "application/json",
+                "output": "application/json"
+            }
+        },
+        {
+            "id": "generate_haptics",
+            "schema": {
+                "input": "application/json",
+                "output": "application/json"
+            }
+        }
+    ]
+}
