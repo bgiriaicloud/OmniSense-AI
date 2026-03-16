@@ -106,7 +106,16 @@ async def websocket_endpoint(websocket: WebSocket):
     model = os.getenv("GEMINI_LIVE_MODEL_ID", "gemini-2.0-flash-live-001")
     logger.info(f"WS connection starting with model: {model}")
     
-    config = {"response_modalities": ["AUDIO"]}
+    config = {
+        "response_modalities": ["AUDIO"],
+        "speech_config": {
+            "voice_config": {
+                "prebuilt_voice_config": {
+                    "voice_name": "Aoede" # Female voice
+                }
+            }
+        }
+    }
     
     try:
         async with client.aio.live.connect(model=model, config=config) as session:

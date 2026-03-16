@@ -18,16 +18,24 @@ class AccessibilityAgent:
         """
         parts = []
         
-        # Hazard first
-        hazard = context.get("detected_hazards")
-        if hazard and "none" not in hazard.lower():
+        # Vision guidance first
+        scene = context.get("scene_description", "")
+        hazard = context.get("detected_hazards", "")
+        
+        if hazard and hazard != "none detected":
             parts.append(f"Caution: {hazard}.")
+        elif scene:
+            parts.append(scene)
             
         # Audio alert
         sound = context.get("environmental_sounds")
+        urgency = context.get("urgency", "none")
         if sound and sound != "none":
             audio_info = context.get("audio_details")
-            parts.append(f"Audio alert: {audio_info or sound}.")
+            if urgency in ["Critical", "Urgent", "Danger"]:
+                parts.append(f"Alert: {audio_info or f'Sound of {sound} detected'}.")
+            else:
+                parts.append(f"Environment: {audio_info or sound}.")
             
         # Navigation
         nav = context.get("navigation_state")

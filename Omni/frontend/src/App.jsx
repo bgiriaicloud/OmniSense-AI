@@ -13,9 +13,11 @@ const App = () => {
         videoRef, canvasRef, captureAndAnalyze, analyzeAudio, mediaStreamRef,
         audioStatus, voiceStatus, seniorMode, setSeniorMode, language, setLanguage,
         handleStartSystems, sensoryProfile, setSensoryProfile,
-        isLiveStreaming, startLiveStream, stopLiveStream
+        isLiveStreaming, startLiveStream, stopLiveStream,
+        startVoiceCommands, stopVoiceCommands
     } = useAccessibility();
 
+    const [isVoiceActive, setIsVoiceActive] = useState(false);
     const [isSystemEnabled, setIsSystemEnabled] = useState(false);
     const [activeTab, setActiveTab] = useState('dashboard');
     const [messages, setMessages] = useState([]);
@@ -23,6 +25,7 @@ const App = () => {
     const [activityLog, setActivityLog] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const activeRecordingRef = useRef(false);
 
     // Initial "Enable the system" prompt — use empty deps so this only fires once on mount
     useEffect(() => {
@@ -91,11 +94,13 @@ const App = () => {
     const handleAudioListen = async () => {
         if (isRecording) {
             setIsRecording(false);
+            activeRecordingRef.current = false;
             return;
         }
 
         if (isAnalyzing || !mediaStreamRef.current) return;
         setIsRecording(true);
+        activeRecordingRef.current = true;
         addToLog('AUDIO', 'LISTENING', 'ACTIVE');
 
         const recordCycle = async () => {
@@ -111,24 +116,24 @@ const App = () => {
 
                 if (result) {
                     const urgencyIcon = result.urgency === 'Critical' ? '🚨' : result.urgency === 'Caution' ? '⚠️' : '✅';
-                    const displayText = `${urgencyIcon} ${result.sound_event}\n\n${result.guidance}`;
-                    setMessages(prev => [...prev, {
-                        role: 'assistant',
-                        text: displayText,
-                        urgency: result.urgency,
-                        id: Date.now()
-                    }]);
-                    // Speak the guidance aloud so the user hears it
-                    speak(result.guidance);
-                    addToLog('AUDIO', result.sound_event, result.urgency || 'PROCESSED');
+                    // Only display/speak if an event was actually detected to avoid noise
+                    if (result.event_detected) {
+                        const displayText = `${urgencyIcon} ${result.sound_event || result.sound_type}\n\n${result.guidance}`;
+                        setMessages(prev => [...prev, {
+                            role: 'assistant',
+                            text: displayText,
+                            urgency: result.urgency,
+                            id: Date.now()
+                        }]);
+                        speak(result.guidance);
+                        addToLog('AUDIO', result.sound_event || result.sound_type, result.urgency || 'PROCESSED');
+                    }
                 }
 
-                setIsRecording(prev => {
-                    if (prev) {
-                        setTimeout(recordCycle, 200);
-                    }
-                    return prev;
-                });
+                // Check the ref (which we should add) or just use a boolean flag
+                if (activeRecordingRef.current) {
+                    setTimeout(recordCycle, 200);
+                }
             };
 
             recorder.start();
@@ -265,6 +270,27 @@ const App = () => {
                             className={`hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black shadow-lg transition-all ${isLiveStreaming ? 'bg-critical text-white shadow-critical/20' : 'bg-primary text-primary-foreground shadow-primary/20'}`}
                         >
                             {isLiveStreaming ? 'STOP STREAM' : 'START LIVE STREAM'}
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (isVoiceActive) {
+                                    stopVoiceCommands();
+                                    setIsVoiceActive(false);
+                                } else {
+                                    startVoiceCommands();
+                                    setIsVoiceActive(true);
+                                }
+                            }}
+                            className={`hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black shadow-lg transition-all ${isVoiceActive ? 'bg-primary text-white' : 'bg-card border border-border text-muted-foreground'}`}
+                        >
+                            {isVoiceActive ? 'VOICE ASST ON' : 'ENABLE VOICE ASST'}
+                        </button>
+                        <button
+                            onClick={() => window.speechSynthesis.cancel()}
+                            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-card border border-border text-muted-foreground hover:text-white"
+                            title="Stop current speech"
+                        >
+                            <X size={14} /> MUTE
                         </button>
                         <div className="flex items-center gap-4 text-muted-foreground">
                             <Bell size={20} className="cursor-pointer hover:text-white" />

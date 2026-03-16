@@ -20,22 +20,24 @@ logger = logging.getLogger("visionguide.vision")
 # ---------------------------------------------------------------------------
 # System prompts
 # ---------------------------------------------------------------------------
-_SYSTEM_VISION = """You are the Vision Agent in a multimodal accessibility system.
-Your job is to provide vivid, accurate descriptions of the camera feed for visually impaired users.
+_SYSTEM_VISION = """You are a Vision Navigation Agent assisting visually challenged users.
+Analyze the provided camera frame to describe the surroundings and any potential hazards.
 
-RULES:
-1. Only report details that are present in the provided image.
-2. Do NOT guess, imagine, or hallucinate details.
-3. Accuracy is critical for navigation and safety.
-4. If the image is unclear or dark, report that precisely.
+Rules:
+1. Only report objects that are clearly visible.
+2. Do not hallucinate obstacles.
+3. If confidence is low, say so.
+4. Accuracy is paramount for user safety.
 
-Analyze the image and return a JSON object with:
-- "agent": "vision_agent"
-- "scene": Vivid, evocative description of detected objects, people, and the environment. Answer user questions directly.
-- "hazard": Specific immediate dangers (e.g., "trip hazard: chair", "slippery floor"). If none, return "None detected".
-- "safety_level": "Safe", "Caution", or "Danger".
-- "guidance": Actionable navigation advice (e.g., "Step to the right to avoid the bag", "Continue straight, path is clear").
-Use plain, calm, spoken language."""
+Output format:
+{
+  "agent": "vision_agent",
+  "scene": "concise description of the environment",
+  "safety_level": "Safe | Caution | Danger",
+  "hazard": "description of any immediate threat",
+  "confidence": 0.0,
+  "guidance": "actionable instruction for the user"
+}"""
 
 _SYSTEM_HAZARD = """You are VisionGuide's hazard-detection specialist.
 Focus exclusively on detecting obstacles, dangerous surfaces, traffic, falls, or other risks.
@@ -72,10 +74,11 @@ class VisionAgent(A2ABaseAgent):
     ) -> Dict[str, Any]:
         schema = {
             "agent": "vision_agent",
-            "scene": "Scene unavailable.",
-            "hazard": "No hazard info.",
-            "guidance": "No guidance.",
-            "safety_level": "Unknown",
+            "scene": "Unknown",
+            "safety_level": "Safe",
+            "hazard": "none detected",
+            "confidence": 0.0,
+            "guidance": "No vision information available.",
         }
         if not self.client:
             return {**schema, "scene": "Mock: bright modern hallway.", "safety_level": "Safe"}

@@ -49,6 +49,15 @@ export const useAccessibility = () => {
         const synth = window.speechSynthesis;
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = lang;
+
+        // Try to find a female voice
+        const voices = synth.getVoices();
+        const femaleVoice = voices.find(v => 
+            (v.name.includes('Female') || v.name.includes('Google US English') || v.name.includes('Samantha') || v.name.includes('Zira') || v.name.includes('Victoria')) && 
+            v.lang.startsWith(lang.split('-')[0])
+        );
+        if (femaleVoice) utterance.voice = femaleVoice;
+
         isSpeakingRef.current = true;
         utterance.onend = () => { isSpeakingRef.current = false; processQueue(); };
         utterance.onerror = (e) => { isSpeakingRef.current = false; if (e.error !== 'canceled') processQueue(); };
@@ -262,7 +271,9 @@ export const useAccessibility = () => {
                 setSafetyLevel(data.urgency === 'Critical' ? 'Danger' : data.urgency === 'Caution' ? 'Caution' : 'Safe');
                 if (data.urgency === 'Critical' && navigator.vibrate) navigator.vibrate([200, 100, 200]);
             }
-            speak(feedback);
+            if (data.event_detected) {
+                speak(feedback);
+            }
             return data;
         } catch (error) {
             console.error("Audio analysis failed:", error);
@@ -422,9 +433,10 @@ export const useAccessibility = () => {
 
     const stopVoiceCommands = useCallback(() => {
         if (voiceRecognitionRef.current) {
-            voiceRecognitionRef.current.onend = null;
-            voiceRecognitionRef.current.stop();
-            voiceRecognitionRef.current = null;
+            const recognition = voiceRecognitionRef.current;
+            voiceRecognitionRef.current = null; // Clear ref FIRST
+            recognition.onend = null;
+            recognition.stop();
         }
         setVoiceStatus('Off');
     }, []);

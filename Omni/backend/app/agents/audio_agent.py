@@ -19,15 +19,19 @@ _SYSTEM_AUDIO = """You are the Audio Agent in a multimodal accessibility system.
 Your task is to analyze live microphone audio and detect environmental sounds
 that may affect user awareness or safety.
 
+Priority: Awareness and Recall. It is better to report a potential sound than to miss one.
+
 Rules:
-1. Only report sounds that are present in the provided audio input.
-2. Do NOT guess or hallucinate sounds.
-3. If confidence is low, return no_event_detected.
-4. Accuracy is critical because the user may rely on this system for safety.
+1. Report any distinct sound event you can hear. 
+2. If you hear a sound but are not 100% sure of its type, use "unknown_sound" and describe it in the guidance.
+3. If no significant sound is detected at all, return "none".
+4. Be extremely sensitive to brief pulses, distant sirens, or mixed background noises.
 
 Detect sounds such as:
 fire_alarm, emergency_siren, vehicle_horn, approaching_vehicle,
-door_knock, speech_nearby, footsteps, loud_crash.
+door_knock, speech_nearby, footsteps, loud_crash, unknown_sound.
+
+Urgency levels: Safe | Caution | Danger | Critical
 
 Return structured JSON:
 {
@@ -75,20 +79,27 @@ class AudioAgent(A2ABaseAgent):
         senior_mode: bool = False,
         language: str = "en",
     ) -> Dict[str, Any]:
-        schema = {
+        # Initial schema for _gemini_json, also used as a fallback
+        initial_schema = {
             "agent": "audio_agent",
             "event_detected": False,
             "sound_type": "none",
             "urgency": "none",
             "confidence": 0.0,
-            "timestamp": "2024-03-21T12:00:00Z",
             "guidance": "No important environmental sounds detected.",
         }
         if not self.client:
-            return {**schema, "sound_type": "Mock: silence", "confidence": 0.5}
+            # Mock response for when client is not available
+            return {
+                **initial_schema,
+                "sound_type": "Mock: silence",
+                "sound_event": "Mock: silence", # Alias for frontend
+                "urgency": "Safe",
+                "confidence": 0.5,
+                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+            }
 
         import datetime
-        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
         
         prompt = _SYSTEM_AUDIO
         if senior_mode:
@@ -101,8 +112,15 @@ class AudioAgent(A2ABaseAgent):
         clean_mime = mime_type.split(";")[0].strip() or "audio/webm"
         parts = [types.Part.from_bytes(data=audio_bytes, mime_type=clean_mime)]
         
-        res = await self._gemini_json(prompt, parts, schema)
-        res["timestamp"] = timestamp
+        res = await self._gemini_json(prompt, parts, initial_schema)
+        res["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        
+        # Mirror sound_type to sound_event for frontend compatibility
+        if "sound_type" in res:
+            res["sound_event"] = res["sound_type"]
+        elif "sound_event" in res:
+            res["sound_type"] = res["sound_event"]
+            
         logger.info(f"[AudioAgent] Result: {res}")
         return res
 

@@ -22,6 +22,12 @@ async def test_audio():
         "id": "1"
     })
     print("Result:", result)
+    if "result" in result:
+        res = result["result"]
+        assert "sound_type" in res
+        assert "sound_event" in res
+        assert "urgency" in res
+        print("Success: sound_type and sound_event found in response.")
 
 if __name__ == "__main__":
     asyncio.run(test_audio())

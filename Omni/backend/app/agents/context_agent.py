@@ -24,13 +24,19 @@ class ContextAgent:
         """
         scene = (vision_result or {}).get("scene", "")
         hazard = (vision_result or {}).get("hazard", "")
-        sound_type = (audio_result or {}).get("sound_type", "none")
+        sound_type = (audio_result or {}).get("sound_type") or (audio_result or {}).get("sound_event", "none")
         audio_guidance = (audio_result or {}).get("guidance", "")
         
-        # Simple safety heuristic
+        # Safety heuristic mapping (normalized to 1-3)
         safety_levels = {
-            "Safe": 1, "Caution": 2, "Danger": 3,
-            "Critical": 3, "none": 1, "Unknown": 1
+            "Critical": 3,
+            "Urgent": 3,
+            "Danger": 3,
+            "Caution": 2,
+            "Normal": 1,
+            "Safe": 1,
+            "none": 1,
+            "Unknown": 1
         }
         
         v_safety = safety_levels.get((vision_result or {}).get("safety_level", "Safe"), 1)
@@ -44,8 +50,10 @@ class ContextAgent:
             "scene_description": scene,
             "detected_hazards": hazard,
             "environmental_sounds": sound_type,
+            "sound_event": sound_type, # Keep as alias for safety
             "audio_details": audio_guidance,
-            "navigation_state": (nav_result or {}).get("instruction", "")
+            "navigation_state": (nav_result or {}).get("instruction", ""),
+            "urgency": (audio_result or {}).get("urgency", "none")
         }
         
         self.memory.append(context)
