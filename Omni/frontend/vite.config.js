@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    proxy: {
+    proxy: process.env.NODE_ENV === 'development' ? {
       '/analyze_scene': 'http://localhost:8000',
       '/analyze_audio': 'http://localhost:8000',
       '/static': 'http://localhost:8000',
@@ -13,6 +13,6 @@ export default defineConfig({
         target: 'ws://localhost:8000',
         ws: true
       }
-    }
+    } : {}
   }
 })

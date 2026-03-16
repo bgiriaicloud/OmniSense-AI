@@ -114,6 +114,7 @@ class Orchestrator(A2ABaseAgent):
         senior_mode: bool = False,
         language: str = "en",
         nav_params: Optional[Dict] = None,
+        session_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Convenience method called by the FastAPI main endpoint.
@@ -131,6 +132,7 @@ class Orchestrator(A2ABaseAgent):
                 "query": query,
                 "senior_mode": senior_mode,
                 "language": language,
+                "session_id": session_id,
             })
             resp = await self._agents["vision"].dispatch_skill(rpc)
             vision_result = resp.get("result")
@@ -141,6 +143,7 @@ class Orchestrator(A2ABaseAgent):
                 "mime_type": audio_mime,
                 "senior_mode": senior_mode,
                 "language": language,
+                "session_id": session_id,
             })
             resp = await self._agents["audio"].dispatch_skill(rpc)
             audio_result = resp.get("result")

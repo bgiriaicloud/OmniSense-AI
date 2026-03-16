@@ -23,14 +23,14 @@ companion. Report scene changes, hazards, and guidance in clear speech.
 """
         
         # Support separate Live model for Native Audio Preview
-        live_model = os.getenv("GEMINI_LIVE_MODEL_ID")
+        live_model = os.getenv("GEMINI_LIVE_MODEL_ID", "gemini-2.0-flash-live-001")
         self.live_model_id = live_model if live_model else None
         
         AccessibilityAgent.__init__(
             self,
             "VisionAgent",
             description,
-            os.getenv("GEMINI_MODEL_ID", "gemini-2.5-flash"),
+            os.getenv("GEMINI_MODEL_ID", "gemini-2.0-flash"),
             adk_instruction
         )
 

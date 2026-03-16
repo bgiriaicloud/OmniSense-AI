@@ -14,7 +14,8 @@ const App = () => {
         audioStatus, voiceStatus, seniorMode, setSeniorMode, language, setLanguage,
         handleStartSystems, sensoryProfile, setSensoryProfile,
         isLiveStreaming, startLiveStream, stopLiveStream,
-        startVoiceCommands, stopVoiceCommands
+        startVoiceCommands, stopVoiceCommands,
+        startActivationListener
     } = useAccessibility();
 
     const [isVoiceActive, setIsVoiceActive] = useState(false);
@@ -27,19 +28,20 @@ const App = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const activeRecordingRef = useRef(false);
 
-    // Initial "Enable the system" prompt — use empty deps so this only fires once on mount
     useEffect(() => {
         if (!isSystemEnabled) {
+            const cleanup = startActivationListener(() => handleEnableSystem());
             const timer = setTimeout(() => speak("Please enable the system to begin."), 1500);
-            return () => clearTimeout(timer);
+            return () => {
+                clearTimeout(timer);
+                if (cleanup) cleanup();
+            };
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isSystemEnabled]);
+    }, [isSystemEnabled, startActivationListener]);
 
     const handleEnableSystem = () => {
         setIsSystemEnabled(true);
         handleStartSystems('dual');
-        // Single speak call — avoids double-cancel from two rapid calls
         setTimeout(() => speak("OmniSense system enabled. Voice and vision agents are now active."), 200);
         addToLog('SYSTEM', 'INITIALIZED', 'SUCCESS');
     };
@@ -154,6 +156,10 @@ const App = () => {
                     <Shield size={120} className="text-primary mx-auto mb-6 filter drop-shadow-[0_0_30px_rgba(58,134,255,0.4)]" />
                     <h1 className="text-5xl font-black mb-2 tracking-tight text-white">Omnisense AI</h1>
                     <p className="text-muted-foreground text-xl">Secure Multimodal Accessibility Engine</p>
+                    <div className="mt-4 flex items-center justify-center gap-2 text-primary/60 text-sm font-bold animate-pulse">
+                        <Mic size={16} /> 
+                        <span>Voice activation active: Say "Enable system"</span>
+                    </div>
                 </motion.div>
                 <button
                     className="bg-primary text-primary-foreground px-10 py-5 rounded-2xl font-black text-2xl shadow-[0_0_50px_-10px_rgba(58,134,255,0.5)] hover:scale-105 transition-transform"
@@ -338,10 +344,10 @@ const App = () => {
                                 </div>
                             </div>
 
-                            <div className="flex-1 bg-black relative flex items-center justify-center min-h-[300px]">
+                            <div className="flex-1 bg-black relative flex items-center justify-center min-h-[300px] lg:min-h-0 aspect-video">
                                 {sensoryProfile === 'vision' ? (
                                     <>
-                                        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                                        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover rounded-b-3xl" />
                                         <canvas ref={canvasRef} className="hidden" />
                                         <button
                                             onClick={() => captureAndAnalyze()}

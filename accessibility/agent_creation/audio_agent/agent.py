@@ -20,7 +20,7 @@ class AudioAgent(AccessibilityAgent):
     def __init__(self):
         # 1. Core Agent Definition
         root_agent = Agent(
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             name="AudioAgent",
             description="Environmental sound detection for deaf and hard-of-hearing users. Identifies sirens, doorbells, bicycle bells, approaching vehicles, and distant voices, providing urgency-rated alerts.",
             instruction='''You are an expert Audio Accessibility Assistant for users who are deaf or hard of hearing. Your goal is to detect and identify significant environmental sounds from the provided audio, including those from a distance. Pay extra attention to: Doorbells, Baby crying, Sirens, Bicycle bells, Distant voices, and Approaching vehicles.

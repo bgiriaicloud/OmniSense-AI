@@ -115,6 +115,16 @@ class AudioAgent(A2ABaseAgent):
         res = await self._gemini_json(prompt, parts, initial_schema)
         res["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
         
+        # Save audio to GCS for persistence
+        from app.core.cloud_manager import cloud_manager
+        timestamp_str = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        cloud_manager.upload_blob(
+            bucket_name="visionguide-audio-logs",
+            source_data=audio_bytes,
+            destination_blob_name=f"audio/{timestamp_str}.webm",
+            content_type=clean_mime
+        )
+
         # Mirror sound_type to sound_event for frontend compatibility
         if "sound_type" in res:
             res["sound_event"] = res["sound_type"]

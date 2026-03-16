@@ -96,15 +96,18 @@ async def root():
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 
 @app.websocket("/ws/live")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, session_id: Optional[str] = None):
     await websocket.accept()
     from google import genai
     from google.genai import types
     import asyncio
     
-    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))
+    from app.core.cloud_manager import cloud_manager
+    logger.info(f"Live Stream session started. ID: {session_id or 'anonymous'}")
+    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or cloud_manager.get_secret("GEMINI_API_KEY")
+    client = genai.Client(api_key=api_key)
     model = os.getenv("GEMINI_LIVE_MODEL_ID", "gemini-2.0-flash-live-001")
-    logger.info(f"WS connection starting with model: {model}")
+    logger.info(f"WS connection starting with model: {model} using {'Secret Manager' if not os.getenv('GEMINI_API_KEY') else 'Env Var'}")
     
     config = {
         "response_modalities": ["AUDIO"],
@@ -249,6 +252,7 @@ async def analyze(
     target_lon: Optional[float] = Form(None),
     current_lat: Optional[float] = Form(None),
     current_lon: Optional[float] = Form(None),
+    session_id: str = Form("default-session"),
 ):
     """Full pipeline: vision + audio + nav → merged context."""
     image_b64: Optional[str] = None
@@ -280,6 +284,7 @@ async def analyze(
         senior_mode=senior_mode,
         language=language,
         nav_params=nav_params,
+        session_id=session_id,
     )
     
     # Save preferences to Firestore
@@ -301,6 +306,7 @@ async def analyze_vision(
     language: str = Form("en"),
     current_lat: Optional[float] = Form(None),
     current_lon: Optional[float] = Form(None),
+    session_id: str = Form("default-session"),
 ):
     try:
         raw = await image.read()
@@ -312,12 +318,27 @@ async def analyze_vision(
         
         final_query = query + (f"\n{weather_context}" if weather_context else "")
         
-        result = await vision_agent._skill_analyze_frame(
-            image_b64=image_b64,
-            query=final_query,
-            senior_mode=senior_mode,
-            language=language
-        )
+        from app.core.a2a_base import jsonrpc_request
+        rpc = jsonrpc_request("analyze_frame", {
+            "image_b64": image_b64,
+            "query": final_query,
+            "senior_mode": senior_mode,
+            "language": language,
+            "session_id": session_id
+        })
+        resp = await vision_agent.dispatch_skill(rpc)
+        result = resp.get("result") or {}
+        
+        # Publish critical hazard alerts to Pub/Sub
+        if result.get("safety_level") == "Danger" or result.get("safety_level") == "Critical":
+            from app.core.cloud_manager import cloud_manager
+            cloud_manager.publish_alert("safety-alerts", {
+                "type": "VISION_HAZARD",
+                "hazard": result.get("hazard"),
+                "timestamp": datetime.datetime.now().isoformat(),
+                "location": {"lat": current_lat, "lon": current_lon}
+            })
+
         return result
     except Exception as exc:
         logger.error(f"[analyze_vision] CRITICAL ERROR: {exc}", exc_info=True)
@@ -329,16 +350,21 @@ async def analyze_audio(
     audio: UploadFile = File(...),
     senior_mode: bool = Form(False),
     language: str = Form("en"),
+    session_id: str = Form("default-session"),
 ):
     try:
         raw = await audio.read()
         audio_b64 = base64.b64encode(raw).decode()
-        result = await audio_agent._skill_monitor_ambient(
-            audio_b64=audio_b64,
-            mime_type=audio.content_type or "audio/webm",
-            senior_mode=senior_mode,
-            language=language,
-        )
+        from app.core.a2a_base import jsonrpc_request
+        rpc = jsonrpc_request("monitor_ambient", {
+            "audio_b64": audio_b64,
+            "mime_type": audio.content_type or "audio/webm",
+            "senior_mode": senior_mode,
+            "language": language,
+            "session_id": session_id
+        })
+        resp = await audio_agent.dispatch_skill(rpc)
+        result = resp.get("result") or {}
         return result
     except Exception as exc:
         logger.error(f"[analyze_audio] CRITICAL ERROR: {exc}", exc_info=True)
@@ -351,27 +377,46 @@ class HeadingRequest(BaseModel):
     target_lat: float
     target_lon: float
     obstacle_context: Optional[Dict[str, Any]] = None
+    session_id: str = "default-session"
 
 
 @app.post("/nav/heading", tags=["Convenience"])
 async def nav_heading(body: HeadingRequest):
-    return await nav_agent._skill_calculate_heading(**body.model_dump())
+    from app.core.a2a_base import jsonrpc_request
+    rpc = jsonrpc_request("calculate_heading", body.model_dump())
+    resp = await nav_agent.dispatch_skill(rpc)
+    return resp.get("result") or {}
 
 
 class HapticsRequest(BaseModel):
     maneuver: str = "straight"
     intensity: float = 1.0
+    session_id: str = "default-session"
 
 
 @app.post("/nav/haptics", tags=["Convenience"])
 async def nav_haptics(body: HapticsRequest):
-    return await nav_agent._skill_generate_haptics(**body.model_dump())
+    from app.core.a2a_base import jsonrpc_request
+    rpc = jsonrpc_request("generate_haptics", body.model_dump())
+    resp = await nav_agent.dispatch_skill(rpc)
+    return resp.get("result") or {}
 
 
 @app.get("/health", tags=["Health"])
 async def health():
+    from app.core.cloud_manager import cloud_manager
+    try:
+        redis_status = "Connected" if cloud_manager.redis_client and cloud_manager.redis_client.ping() else "Disconnected"
+    except:
+        redis_status = "Error"
+    
     return {
         "status": "ok",
         "agents": ["VisionAgent", "AudioAgent", "NavAgent", "Orchestrator"],
+        "storage": {
+            "firestore": "Active",
+            "memorystore": redis_status,
+            "gcs": "Active"
+        },
         "protocol": "A2A/0.3",
     }

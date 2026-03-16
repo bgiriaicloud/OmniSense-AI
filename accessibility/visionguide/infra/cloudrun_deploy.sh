@@ -39,7 +39,7 @@ gcloud run deploy $SERVICE_NAME \
   --region $REGION \
   --allow-unauthenticated \
   --port 8000 \
-  --set-env-vars GEMINI_MODEL_ID=$GEMINI_MODEL_ID \
+  --set-env-vars GEMINI_MODEL_ID=$GEMINI_MODEL_ID,GEMINI_LIVE_MODEL_ID=$GEMINI_LIVE_MODEL_ID \
   --set-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest
 
 echo "✅ Deployment complete!"

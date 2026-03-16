@@ -6,3 +6,9 @@ pillow
 google-genai>=1.0.0
 google-adk>=1.0.0
 httpx
+google-cloud-secret-manager
+google-cloud-storage
+google-cloud-firestore
+google-cloud-pubsub
+google-cloud-logging
+redis>=5.0.0

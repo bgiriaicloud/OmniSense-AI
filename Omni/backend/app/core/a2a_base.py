@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import uuid
+import datetime
 from abc import abstractmethod
 from typing import Any, ClassVar, Dict, List, Optional
 
@@ -83,24 +84,28 @@ class A2ABaseAgent(BaseAgent):
         super().__init__(name=name, description=description)
         from app.core.cloud_manager import cloud_manager
         resolved_model_id = model_id or os.getenv("GEMINI_MODEL_ID", "gemini-2.0-flash")
+        
+        # Priority: Env Var > Secret Manager
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         use_vertex = os.getenv("USE_VERTEX_AI", "false").lower() == "true"
         
+        source = "Environment"
         if not api_key and not use_vertex:
             api_key = cloud_manager.get_secret("GEMINI_API_KEY")
+            source = "Secret Manager" if api_key else "None"
             
         # Use object.__setattr__ to bypass Pydantic strict mode for runtime-only fields
         object.__setattr__(self, "model_id", resolved_model_id)
         
         if use_vertex:
             # Vertex AI initialization
-            project = os.getenv("GOOGLE_CLOUD_PROJECT", "multisensoryagent")
+            project = os.getenv("GOOGLE_CLOUD_PROJECT", "project-017f83aa-1166-4bbf-aae")
             location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
             object.__setattr__(self, "client", Client(vertexai=True, project=project, location=location))
             logger.info("[%s] Vertex AI client ready (project=%s, region=%s)", name, project, location)
         elif api_key:
             object.__setattr__(self, "client", Client(api_key=api_key))
-            logger.info("[%s] Gemini client ready (model=%s)", name, resolved_model_id)
+            logger.info("[%s] Gemini client ready (model=%s, source=%s)", name, resolved_model_id, source)
         else:
             object.__setattr__(self, "client", None)
             logger.warning("[%s] No API key or Vertex config found — mock mode active", name)
@@ -125,10 +130,19 @@ class A2ABaseAgent(BaseAgent):
         """
         Receives a JSON-RPC 2.0 request and routes to the matching skill handler.
         Handlers are named  _skill_<method>  on the subclass.
+        Integrates Omnisense session persistence.
         """
         req_id = rpc_request.get("id")
         method = rpc_request.get("method", "")
         params = rpc_request.get("params", {})
+        session_id = rpc_request.get("session_id") or params.get("session_id")
+
+        from app.core.cloud_manager import cloud_manager
+        session_data = {}
+        if session_id:
+            session_data = cloud_manager.get_session(session_id) or {}
+            # Update agent state from session if needed
+            # For now, we just pass session_data to the handler if it accepts it
 
         handler_name = f"_skill_{method}"
         handler = getattr(self, handler_name, None)
@@ -136,7 +150,22 @@ class A2ABaseAgent(BaseAgent):
             return jsonrpc_error(-32601, f"Method '{method}' not found", req_id)
 
         try:
+            # Inject session_data if the handler is ready for it, or just keep it in context
             result = await handler(**params)
+            
+            # Save updated session data back to Firestore
+            if session_id:
+                # Basic session update: store the last result or specific agent state
+                update_data = {
+                    "last_interaction": {
+                        "agent": self.name,
+                        "method": method,
+                        "timestamp": datetime.datetime.now().isoformat()
+                    }
+                }
+                # Merge logic can be more complex based on requirements
+                cloud_manager.save_session(session_id, update_data)
+                
             return jsonrpc_response(result, req_id)
         except Exception as exc:
             logger.exception("[%s] Error in skill %s", self.name, method)
@@ -167,8 +196,9 @@ class A2ABaseAgent(BaseAgent):
         # Priority list of models for dynamic mapping
         models_to_try = [
             self.model_id,
-            "gemini-2.5-flash",
             "gemini-2.0-flash",
+            "gemini-2.0-flash-lite-preview-02-05",
+            "gemini-2.5-flash",
             "gemini-1.5-flash"
         ]
         # Remove duplicates while preserving order

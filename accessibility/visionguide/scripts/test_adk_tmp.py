@@ -5,7 +5,7 @@ from google.genai import types
 
 os.environ["GEMINI_API_KEY"] = os.environ.get("GEMINI_API_KEY", "mock_key")
 
-agent = Agent(name="TestAgent", model="gemini-2.5-flash", instruction="You are a test agent.")
+agent = Agent(name="TestAgent", model="gemini-2.0-flash", instruction="You are a test agent.")
 runner = Runner(agent=agent, app_name="test_app")
 
 new_msg = types.Content(role="user", parts=[types.Part.from_text(text="Hello")])

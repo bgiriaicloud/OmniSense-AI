@@ -12,7 +12,7 @@ load_dotenv(override=True)
 class AccessibilityAgent(ABC):
     def __init__(self, name, description, model_id=None, instruction=None):
         self.api_key = os.getenv("GEMINI_API_KEY")
-        self.model_id = model_id or os.getenv("GEMINI_MODEL_ID", "gemini-2.5-flash")
+        self.model_id = model_id or os.getenv("GEMINI_MODEL_ID", "gemini-2.0-flash")
         logger.info(f"[{name}] Initializing with API Key: {self.api_key[:8]}... and Model: {self.model_id}")
         
         if self.api_key:

@@ -13,6 +13,13 @@ export const useAccessibility = () => {
     const [language, setLanguage] = useState('en');
     const [hasStarted, setHasStarted] = useState(false);
     const [sensoryProfile, setSensoryProfile] = useState('vision'); // 'vision', 'hearing', 'dual'
+    const [sessionId] = useState(() => {
+        const stored = localStorage.getItem('omnisense_session_id');
+        if (stored) return stored;
+        const newId = `sess-${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem('omnisense_session_id', newId);
+        return newId;
+    });
 
     const [isLiveStreaming, setIsLiveStreaming] = useState(false);
     const [isScanning, setIsScanning] = useState(false);
@@ -172,6 +179,7 @@ export const useAccessibility = () => {
             formData.append('query', query);
             formData.append('senior_mode', seniorMode);
             formData.append('language', language);
+            formData.append('session_id', sessionId);
 
             // Add geolocation context
             if (navigator.geolocation) {
@@ -259,6 +267,7 @@ export const useAccessibility = () => {
             formData.append('audio', audioBlob, 'audio.webm');
             formData.append('senior_mode', seniorMode);
             formData.append('language', language);
+            formData.append('session_id', sessionId);
 
             const response = await fetch(`${API_BASE}/analyze/audio`, {
                 method: 'POST',
@@ -300,6 +309,7 @@ export const useAccessibility = () => {
                         target_lat: targetLat,
                         target_lon: targetLon,
                         obstacle_context: obstaclCtx,
+                        session_id: sessionId
                     };
                     const resp = await fetch(`${API_BASE}/nav/heading`, {
                         method: 'POST',
@@ -447,9 +457,11 @@ export const useAccessibility = () => {
 
         await resumeAudioContext();
 
-        const wsBase = API_BASE.replace(/^http/, 'ws');
-        // Ensure we use the same host as API_BASE but with websocket protocol
-        const socketUrl = `${wsBase}/ws/live`;
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const socketUrl = import.meta.env.DEV 
+            ? `${API_BASE.replace(/^http/, 'ws')}/ws/live`
+            : `${wsProtocol}//${window.location.host}/ws/live`;
+        
         console.log("Connecting to Live Stream WebSocket:", socketUrl);
 
         const socket = new WebSocket(socketUrl);
@@ -620,6 +632,51 @@ export const useAccessibility = () => {
         return () => clearInterval(wellnessInterval);
     }, [hasStarted, seniorMode, speak]);
 
+    // --- Activation Listener (Splash Screen) ---
+    const startActivationListener = useCallback((onActivated) => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return null;
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        
+        recognition.onresult = (event) => {
+            const transcript = Array.from(event.results)
+                .map(result => result[0].transcript)
+                .join('')
+                .toLowerCase();
+            
+            if (
+                transcript.includes("enable system") || 
+                transcript.includes("start system") || 
+                transcript.includes("activate omni") || 
+                transcript.includes("turn on system")
+            ) {
+                recognition.stop();
+                onActivated();
+            }
+        };
+
+        recognition.onend = () => {
+            // Keep listening if not yet activated
+            if (!hasStarted) {
+                try { recognition.start(); } catch (e) {}
+            }
+        };
+
+        try {
+            recognition.start();
+            return () => {
+                recognition.onend = null;
+                recognition.stop();
+            };
+        } catch (e) {
+            console.error("Failed to start activation listener:", e);
+            return null;
+        }
+    }, [hasStarted]);
+
     const handleStopSystems = useCallback(() => {
         setHasStarted(false);
         stopAllHardware();
@@ -646,6 +703,7 @@ export const useAccessibility = () => {
         speak,
         startVoiceCommands,
         stopVoiceCommands,
+        startActivationListener,
         seniorMode,
         setSeniorMode,
         language,

@@ -26,7 +26,7 @@ them clearly in the transcript using brackets.
             self,
             "AudioAgent",
             description,
-            os.getenv("GEMINI_MODEL_ID", "gemini-2.5-flash"),
+            os.getenv("GEMINI_MODEL_ID", "gemini-2.0-flash"),
             adk_instruction
         )
 
