@@ -1,11 +1,6 @@
 """
 Orchestrator — A2A/0.3 + Google ADK
 Skills: route_message, merge_context
-
-The Orchestrator acts as the central A2A router:
-  - route_message: dispatches an incoming JSON-RPC call to the correct agent
-  - merge_context: combines outputs from VisionAgent + AudioAgent + NavAgent
-    into a unified accessibility context object
 """
 from __future__ import annotations
 
@@ -15,11 +10,10 @@ from typing import Any, ClassVar, Deque, Dict, List, Optional
 
 from app.core.a2a_base import A2ABaseAgent, jsonrpc_error
 from app.core.message import ORCHESTRATOR_SKILLS
+from app.agents.context_agent import ContextAgent
+from app.agents.accessibility_agent import AccessibilityAgent
 
 logger = logging.getLogger("visionguide.orchestrator")
-
-# How many past observations to keep in memory
-_MAX_MEMORY = 10
 
 
 class Orchestrator(A2ABaseAgent):
@@ -35,19 +29,16 @@ class Orchestrator(A2ABaseAgent):
     ):
         super().__init__(
             name="Orchestrator",
-            description="A2A Router & Context Merger for VisionGuide multi-agent system.",
+            description="A2A Router & Multi-Agent Orchestrator for VisionGuide.",
         )
-        # Agent registry (populated by main.py)
         self._agents: Dict[str, A2ABaseAgent] = {}
-        if vision_agent:
-            self._agents["vision"] = vision_agent
-        if audio_agent:
-            self._agents["audio"] = audio_agent
-        if nav_agent:
-            self._agents["nav"] = nav_agent
+        if vision_agent: self._agents["vision"] = vision_agent
+        if audio_agent:  self._agents["audio"] = audio_agent
+        if nav_agent:    self._agents["nav"] = nav_agent
 
-        # Rolling memory of merged contexts
-        self._memory: Deque[Dict] = deque(maxlen=_MAX_MEMORY)
+        # New Cooperating Agents
+        self.context_agent = ContextAgent()
+        self.accessibility_agent = AccessibilityAgent()
 
     # ------------------------------------------------------------------
     # Skill: route_message
@@ -79,81 +70,37 @@ class Orchestrator(A2ABaseAgent):
         senior_mode: bool = False,
     ) -> Dict[str, Any]:
         """
-        Merges the outputs from multiple agents into a single unified context
-        and stores it in rolling memory.
+        Cooperative flow: 
+        Sensor Agents -> ContextAgent -> AccessibilityAgent
         """
-        # --- Safety level aggregation ---
-        safety_map = {"Danger": 3, "Caution": 2, "Safe": 1, "Unknown": 0}
-        urgency_map = {"Critical": 3, "Caution": 2, "Safe": 1, "none": 1}
-
-        vision_safety = safety_map.get(
-            (vision_result or {}).get("safety_level", "Unknown"), 0
-        )
-        audio_urgency = urgency_map.get(
-            (audio_result or {}).get("urgency", "none"), 1
+        # 1. Build unified context via ContextAgent
+        context = await self.context_agent.process_observations(
+            vision_result=vision_result,
+            audio_result=audio_result,
+            nav_result=nav_result
         )
 
-        # Unified safety level
-        combined_score = max(vision_safety, audio_urgency)
-        unified_safety = {3: "Danger", 2: "Caution", 1: "Safe", 0: "Unknown"}.get(
-            combined_score, "Unknown"
+        # 2. Generate final guidance via AccessibilityAgent
+        spoken_guidance = await self.accessibility_agent.generate_guidance(
+            context=context,
+            senior_mode=senior_mode
         )
 
-        # --- Build merged output ---
-        scene = (vision_result or {}).get("scene", "")
-        hazard = (vision_result or {}).get("hazard", "")
-        sound_type = (audio_result or {}).get("sound_type", "none")
-        audio_guidance = (audio_result or {}).get("guidance", "")
-        nav_instruction = (nav_result or {}).get("instruction", "")
-
-        # Persistent hazard detection from memory
-        recent_hazards = [m.get("hazard", "") for m in self._memory if m.get("hazard")]
-        is_persistent = any(
-            h and h.lower() not in ("none detected", "no hazard info.")
-            for h in recent_hazards[-3:]
-        )
-
-        # Compose spoken guidance
-        parts: List[str] = []
-        if hazard and hazard.lower() not in ("none detected", "no hazard info."):
-            if is_persistent:
-                parts.append(f"⚠ Persistent hazard: {hazard}.")
-            else:
-                parts.append(f"Hazard: {hazard}.")
-        
-        if sound_type and sound_type != "none":
-            parts.append(f"Audio Alert: {audio_guidance or sound_type}.")
-        
-        if nav_instruction:
-            parts.append(nav_instruction)
-
-        spoken_guidance = " ".join(parts) if parts else "All clear — surroundings appear safe."
-
-        if hazard and hazard.lower() not in ("none detected", "no hazard info."):
+        # 3. Publish alerts if needed
+        hazard = context.get("detected_hazards")
+        if hazard and "none" not in hazard.lower():
             from app.core.cloud_manager import cloud_manager
             cloud_manager.publish_alert("hazard-alerts", {
                 "hazard": hazard,
-                "scene": scene,
-                "unified_safety": unified_safety,
-                "is_persistent": is_persistent
+                "unified_safety": context.get("unified_safety")
             })
 
-        merged = {
-            "unified_safety": unified_safety,
-            "scene": scene,
-            "hazard": hazard,
-            "sound_type": sound_type,
-            "audio_guidance": audio_guidance,
-            "nav_instruction": nav_instruction,
+        # Return the merged state
+        return {
+            **context,
             "spoken_guidance": spoken_guidance,
-            "is_persistent_hazard": is_persistent,
-            "senior_mode": senior_mode,
-            "memory_depth": len(self._memory),
+            "senior_mode": senior_mode
         }
-
-        # Persist in rolling memory
-        self._memory.append(merged)
-        return merged
 
     # ------------------------------------------------------------------
     # Convenience: full pipeline
