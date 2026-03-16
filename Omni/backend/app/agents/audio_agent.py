@@ -15,27 +15,40 @@ from app.core.message import AUDIO_SKILLS
 
 logger = logging.getLogger("visionguide.audio")
 
-_SYSTEM_AMBIENT = """You are an expert Audio Accessibility Assistant for users who are deaf or hard of hearing.
-Your job is to listen to the audio and describe EVERYTHING you hear, then guide the user based on it.
+_SYSTEM_AUDIO = """You are the Audio Agent in a multimodal accessibility system.
+Your task is to analyze live microphone audio and detect environmental sounds
+that may affect user awareness or safety.
 
-RULES:
-1. ALWAYS describe the audio environment — even silence has information ("It is quiet around you. No sounds detected.").
-2. Report sounds clearly and specifically: "I hear a car engine nearby", "There are voices in the background", "A phone is ringing".
-3. Assess the safety implication of each sound.
-4. Give practical, actionable guidance — never leave the user without direction.
-5. Do NOT say "No guidance needed." — always provide a contextual statement even if safe.
+Rules:
+1. Only report sounds that are present in the provided audio input.
+2. Do NOT guess or hallucinate sounds.
+3. If confidence is low, return no_event_detected.
+4. Accuracy is critical because the user may rely on this system for safety.
 
-Return a JSON object:
-- "sound_event": Clear description of what you hear (e.g., "Quiet indoor environment", "Car engine approaching", "Conversation in background").
-- "urgency": "Critical" (immediate danger), "Caution" (pay attention), or "Safe" (normal).
-- "guidance": Specific instruction (e.g., "The area sounds quiet and safe to move.", "A vehicle is nearby — wait before crossing.", "Someone is speaking — you may want to respond.")."""
+Detect sounds such as:
+fire_alarm, emergency_siren, vehicle_horn, approaching_vehicle,
+door_knock, speech_nearby, footsteps, loud_crash.
 
-_SYSTEM_ALERTS = """You are an expert Audio Accessibility Assistant for users who are deaf or hard of hearing.
-Listen for emergency sounds: alarms, sirens, smoke detectors, car horns, screams.
-Return a JSON object:
-  - alerts: list of detected alert sounds (empty list if none).
-  - highest_urgency: "Safe", "Caution", or "Critical".
-  - action: immediate instruction for the user."""
+Return structured JSON:
+{
+  "agent": "audio_agent",
+  "event_detected": true,
+  "sound_type": "fire_alarm",
+  "urgency": "Critical",
+  "confidence": 0.95,
+  "timestamp": "2024-03-21T12:00:00Z",
+  "guidance": "Immediate evacuation required. Fire alarm detected."
+}
+
+If no reliable sound is detected:
+{
+  "agent": "audio_agent",
+  "event_detected": false,
+  "sound_type": "none",
+  "urgency": "none",
+  "confidence": 0.0,
+  "guidance": "No important environmental sounds detected."
+}"""
 
 
 class AudioAgent(A2ABaseAgent):
@@ -47,8 +60,8 @@ class AudioAgent(A2ABaseAgent):
         super().__init__(
             name="AudioAgent",
             description=(
-                "Environmental sound detection for deaf and hard-of-hearing users. "
-                "Identifies sirens, alarms, approaching vehicles, voices, and more."
+                "Grounded Live Audio Agent for environmental sound detection. "
+                "Identifies safety-critical audio events with strict grounding."
             ),
         )
 
@@ -63,14 +76,21 @@ class AudioAgent(A2ABaseAgent):
         language: str = "en",
     ) -> Dict[str, Any]:
         schema = {
-            "sound_event": "Unknown.",
-            "urgency": "Normal",
-            "guidance": "No guidance.",
+            "agent": "audio_agent",
+            "event_detected": False,
+            "sound_type": "none",
+            "urgency": "none",
+            "confidence": 0.0,
+            "timestamp": "2024-03-21T12:00:00Z",
+            "guidance": "No important environmental sounds detected.",
         }
         if not self.client:
-            return {**schema, "sound_event": "Mock: ambient street noise.", "urgency": "Normal"}
+            return {**schema, "sound_type": "Mock: silence", "confidence": 0.5}
 
-        prompt = _SYSTEM_AMBIENT
+        import datetime
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        
+        prompt = _SYSTEM_AUDIO
         if senior_mode:
             prompt += "\n\nSENIOR MODE: Use warm, patient language."
         if language != "en":
@@ -80,7 +100,9 @@ class AudioAgent(A2ABaseAgent):
         audio_bytes = base64.b64decode(audio_b64)
         clean_mime = mime_type.split(";")[0].strip() or "audio/webm"
         parts = [types.Part.from_bytes(data=audio_bytes, mime_type=clean_mime)]
+        
         res = await self._gemini_json(prompt, parts, schema)
+        res["timestamp"] = timestamp
         logger.info(f"[AudioAgent] Result: {res}")
         return res
 
@@ -92,15 +114,5 @@ class AudioAgent(A2ABaseAgent):
         audio_b64: str,
         mime_type: str = "audio/webm",
     ) -> Dict[str, Any]:
-        schema = {
-            "alerts": [],
-            "highest_urgency": "Normal",
-            "action": "Continue as normal.",
-        }
-        if not self.client:
-            return {**schema, "alerts": [], "highest_urgency": "Normal"}
-
-        audio_bytes = base64.b64decode(audio_b64)
-        clean_mime = mime_type.split(";")[0].strip() or "audio/webm"
-        parts = [types.Part.from_bytes(data=audio_bytes, mime_type=clean_mime)]
-        return await self._gemini_json(_SYSTEM_ALERTS, parts, schema)
+        """Legacy skill — redirected to monitor_ambient logic."""
+        return await self._skill_monitor_ambient(audio_b64, mime_type)

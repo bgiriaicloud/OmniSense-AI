@@ -1,2 +1,22 @@
+# Environment variables
 .env
 config/.env
+frontend/.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+*.log
+
+# Node.js
+node_modules/
+dist/
+build/
+.DS_Store
+
+# Git
+.git/

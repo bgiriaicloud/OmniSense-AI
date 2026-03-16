@@ -84,13 +84,13 @@ class Orchestrator(A2ABaseAgent):
         """
         # --- Safety level aggregation ---
         safety_map = {"Danger": 3, "Caution": 2, "Safe": 1, "Unknown": 0}
-        urgency_map = {"Critical": 3, "Caution": 2, "Normal": 1}
+        urgency_map = {"Critical": 3, "Caution": 2, "Safe": 1, "none": 1}
 
         vision_safety = safety_map.get(
             (vision_result or {}).get("safety_level", "Unknown"), 0
         )
         audio_urgency = urgency_map.get(
-            (audio_result or {}).get("urgency", "Normal"), 1
+            (audio_result or {}).get("urgency", "none"), 1
         )
 
         # Unified safety level
@@ -102,7 +102,8 @@ class Orchestrator(A2ABaseAgent):
         # --- Build merged output ---
         scene = (vision_result or {}).get("scene", "")
         hazard = (vision_result or {}).get("hazard", "")
-        sound_event = (audio_result or {}).get("sound_event", "")
+        sound_type = (audio_result or {}).get("sound_type", "none")
+        audio_guidance = (audio_result or {}).get("guidance", "")
         nav_instruction = (nav_result or {}).get("instruction", "")
 
         # Persistent hazard detection from memory
@@ -119,12 +120,14 @@ class Orchestrator(A2ABaseAgent):
                 parts.append(f"⚠ Persistent hazard: {hazard}.")
             else:
                 parts.append(f"Hazard: {hazard}.")
-        if sound_event and sound_event.lower() not in ("unknown.", ""):
-            parts.append(f"Sound alert: {sound_event}.")
+        
+        if sound_type and sound_type != "none":
+            parts.append(f"Audio Alert: {audio_guidance or sound_type}.")
+        
         if nav_instruction:
             parts.append(nav_instruction)
 
-        spoken_guidance = " ".join(parts) if parts else "All clear — no hazards detected."
+        spoken_guidance = " ".join(parts) if parts else "All clear — surroundings appear safe."
 
         if hazard and hazard.lower() not in ("none detected", "no hazard info."):
             from app.core.cloud_manager import cloud_manager
@@ -139,7 +142,8 @@ class Orchestrator(A2ABaseAgent):
             "unified_safety": unified_safety,
             "scene": scene,
             "hazard": hazard,
-            "sound_event": sound_event,
+            "sound_type": sound_type,
+            "audio_guidance": audio_guidance,
             "nav_instruction": nav_instruction,
             "spoken_guidance": spoken_guidance,
             "is_persistent_hazard": is_persistent,
