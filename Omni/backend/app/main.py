@@ -104,10 +104,14 @@ async def websocket_endpoint(websocket: WebSocket, session_id: Optional[str] = N
     
     from app.core.cloud_manager import cloud_manager
     logger.info(f"Live Stream session started. ID: {session_id or 'anonymous'}")
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or cloud_manager.get_secret("GEMINI_API_KEY")
+    # Configuration
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    MODEL = os.getenv("MODEL", "gemini-2.5-flash-native-audio-preview-12-2025")
+    logger.info(f"WS connection starting with model: {MODEL} using {'Env Var' if GEMINI_API_KEY else 'Secret Manager'}")
+    
+    api_key = GEMINI_API_KEY or cloud_manager.get_secret("GEMINI_API_KEY")
     client = genai.Client(api_key=api_key)
-    model = os.getenv("GEMINI_LIVE_MODEL_ID", "gemini-2.0-flash-live-001")
-    logger.info(f"WS connection starting with model: {model} using {'Secret Manager' if not os.getenv('GEMINI_API_KEY') else 'Env Var'}")
+    model = MODEL
     
     config = {
         "response_modalities": ["AUDIO"],

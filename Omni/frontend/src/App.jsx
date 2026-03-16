@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
-    Camera, Mic, Shield, AlertTriangle, Info, Heart, Play, Square,
+    Camera, Mic, Shield,
     LayoutDashboard, History, BarChart2, Settings, Search, Bell, User,
-    MoreVertical, Send, Loader2, Menu, X, Pill, Activity, ExternalLink
+    MoreVertical, Send, Loader2, Menu, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAccessibility } from './hooks/useAccessibility';
@@ -11,7 +11,7 @@ const App = () => {
     const {
         safetyLevel, isAnalyzing, speak,
         videoRef, canvasRef, captureAndAnalyze, analyzeAudio, mediaStreamRef,
-        audioStatus, voiceStatus, seniorMode, setSeniorMode, language, setLanguage,
+        audioStatus, voiceStatus,
         handleStartSystems, sensoryProfile, setSensoryProfile,
         isLiveStreaming, startLiveStream, stopLiveStream,
         startVoiceCommands, stopVoiceCommands,
@@ -37,6 +37,7 @@ const App = () => {
                 if (cleanup) cleanup();
             };
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isSystemEnabled, startActivationListener]);
 
     const handleEnableSystem = () => {
@@ -158,7 +159,7 @@ const App = () => {
                     <p className="text-muted-foreground text-xl">Secure Multimodal Accessibility Engine</p>
                     <div className="mt-4 flex items-center justify-center gap-2 text-primary/60 text-sm font-bold animate-pulse">
                         <Mic size={16} /> 
-                        <span>Voice activation active: Say "Enable system"</span>
+                        <span>Voice activation active: Say &quot;Enable system&quot;</span>
                     </div>
                 </motion.div>
                 <button

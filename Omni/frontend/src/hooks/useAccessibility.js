@@ -228,7 +228,7 @@ export const useAccessibility = () => {
         } finally {
             setIsAnalyzing(false);
         }
-    }, [seniorMode, language, speak]);
+    }, [seniorMode, language, speak, sessionId]);
 
     const captureAndAnalyze = useCallback(async (query, preloadedDataUrl, delay = 0) => {
         if (isCoolingDown) {
@@ -292,7 +292,7 @@ export const useAccessibility = () => {
             setIsAnalyzing(false);
             setAudioStatus('Environmental Listener');
         }
-    }, [seniorMode, language, speak]);
+    }, [seniorMode, language, speak, sessionId]);
 
     // --- Navigation: point-to-point heading via NavAgent ---
     const navigateTo = useCallback(async (targetLat, targetLon, obstaclCtx = null) => {
@@ -325,7 +325,7 @@ export const useAccessibility = () => {
                 }
             }, () => { speak("Could not get your location."); resolve(null); });
         });
-    }, [speak]);
+    }, [speak, sessionId]);
 
     // --- Voice Command Engine ---
     const startVoiceCommands = useCallback(() => {
@@ -439,7 +439,7 @@ export const useAccessibility = () => {
 
         recognition.start();
         voiceRecognitionRef.current = recognition;
-    }, [captureAndAnalyze, language]);
+    }, [captureAndAnalyze, language, speak]);
 
     const stopVoiceCommands = useCallback(() => {
         if (voiceRecognitionRef.current) {
@@ -457,10 +457,8 @@ export const useAccessibility = () => {
 
         await resumeAudioContext();
 
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const socketUrl = import.meta.env.DEV 
-            ? `${API_BASE.replace(/^http/, 'ws')}/ws/live`
-            : `${wsProtocol}//${window.location.host}/ws/live`;
+        // const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const socketUrl = `${API_BASE.replace(/^http/, 'ws')}/ws/live`;
         
         console.log("Connecting to Live Stream WebSocket:", socketUrl);
 
@@ -498,7 +496,6 @@ export const useAccessibility = () => {
             // Start the audio loop (Audio: Type 0x02)
             // Using a simpler approach for the bridge: capture small chunks
             if (mediaStreamRef.current) {
-                const audioChunks = [];
                 const audioRecorder = new MediaRecorder(mediaStreamRef.current, { mimeType: 'audio/webm' });
                 audioRecorder.ondataavailable = async (e) => {
                     if (e.data.size > 0 && socket.readyState === WebSocket.OPEN) {
@@ -534,6 +531,7 @@ export const useAccessibility = () => {
             if (socket.frameInterval) clearInterval(socket.frameInterval);
             if (socket.audioRecorder) socket.audioRecorder.stop();
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLiveStreaming, speak, videoRef, canvasRef]);
 
     const stopLiveStream = useCallback(() => {
@@ -661,7 +659,7 @@ export const useAccessibility = () => {
         recognition.onend = () => {
             // Keep listening if not yet activated
             if (!hasStarted) {
-                try { recognition.start(); } catch (e) {}
+                try { recognition.start(); } catch (e) { /* ignore */ }
             }
         };
 

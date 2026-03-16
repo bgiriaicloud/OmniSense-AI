@@ -83,7 +83,7 @@ class A2ABaseAgent(BaseAgent):
     def __init__(self, name: str, description: str, model_id: str | None = None):
         super().__init__(name=name, description=description)
         from app.core.cloud_manager import cloud_manager
-        resolved_model_id = model_id or os.getenv("GEMINI_MODEL_ID", "gemini-2.0-flash")
+        resolved_model_id = model_id or os.getenv("MODEL") or os.getenv("GEMINI_MODEL_ID", "gemini-2.0-flash")
         
         # Priority: Env Var > Secret Manager
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
