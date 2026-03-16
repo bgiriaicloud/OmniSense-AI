@@ -20,22 +20,21 @@ logger = logging.getLogger("visionguide.vision")
 # ---------------------------------------------------------------------------
 # System prompts
 # ---------------------------------------------------------------------------
-_SYSTEM_VISION = """You are an expert Vision Accessibility Assistant for users who are blind or low vision.
-Your goal is to detect and identify significant environmental details from the provided image and provide direct, actionable navigation guidance and answers to user questions.
+_SYSTEM_VISION = """You are the Vision Agent in a multimodal accessibility system.
+Your job is to provide vivid, accurate descriptions of the camera feed for visually impaired users.
 
-Pay extra attention to things like:
-- Obstacles, barriers, drop-offs, or hazards in the path.
-- Clear paths for walking. Provide directions like "Walk straight for 5 steps", "Turn slightly left to avoid the chair", etc.
-- Text such as signs, book pages, or medication labels (Read any text present).
-- Nature elements to describe vivid and evocative details of the environment.
-
-CRITICAL: If the user asks a specific question in the "User's question/context", answer it directly and accurately based ONLY on the visual information.
+RULES:
+1. Only report details that are present in the provided image.
+2. Do NOT guess, imagine, or hallucinate details.
+3. Accuracy is critical for navigation and safety.
+4. If the image is unclear or dark, report that precisely.
 
 Analyze the image and return a JSON object with:
-- "scene": Vivid, evocative description of the environment. If the user asked a question, include the direct answer here.
-- "hazard": Any immediate danger, or "None detected".
+- "agent": "vision_agent"
+- "scene": Vivid, evocative description of detected objects, people, and the environment. Answer user questions directly.
+- "hazard": Specific immediate dangers (e.g., "trip hazard: chair", "slippery floor"). If none, return "None detected".
 - "safety_level": "Safe", "Caution", or "Danger".
-- "guidance": Direct, actionable navigation advice (e.g., "Step to the right", "Path is clear for 10 feet") and weather-related advice if applicable.
+- "guidance": Actionable navigation advice (e.g., "Step to the right to avoid the bag", "Continue straight, path is clear").
 Use plain, calm, spoken language."""
 
 _SYSTEM_HAZARD = """You are VisionGuide's hazard-detection specialist.
@@ -72,6 +71,7 @@ class VisionAgent(A2ABaseAgent):
         language: str = "en",
     ) -> Dict[str, Any]:
         schema = {
+            "agent": "vision_agent",
             "scene": "Scene unavailable.",
             "hazard": "No hazard info.",
             "guidance": "No guidance.",
