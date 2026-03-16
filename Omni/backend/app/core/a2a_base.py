@@ -81,16 +81,29 @@ class A2ABaseAgent(BaseAgent):
 
     def __init__(self, name: str, description: str, model_id: str | None = None):
         super().__init__(name=name, description=description)
+        from app.core.cloud_manager import cloud_manager
         resolved_model_id = model_id or os.getenv("GEMINI_MODEL_ID", "gemini-2.0-flash")
-        api_key = os.getenv("GEMINI_API_KEY", "")
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        use_vertex = os.getenv("USE_VERTEX_AI", "false").lower() == "true"
+        
+        if not api_key and not use_vertex:
+            api_key = cloud_manager.get_secret("GEMINI_API_KEY")
+            
         # Use object.__setattr__ to bypass Pydantic strict mode for runtime-only fields
         object.__setattr__(self, "model_id", resolved_model_id)
-        if api_key:
+        
+        if use_vertex:
+            # Vertex AI initialization
+            project = os.getenv("GOOGLE_CLOUD_PROJECT", "multisensoryagent")
+            location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+            object.__setattr__(self, "client", Client(vertexai=True, project=project, location=location))
+            logger.info("[%s] Vertex AI client ready (project=%s, region=%s)", name, project, location)
+        elif api_key:
             object.__setattr__(self, "client", Client(api_key=api_key))
             logger.info("[%s] Gemini client ready (model=%s)", name, resolved_model_id)
         else:
             object.__setattr__(self, "client", None)
-            logger.warning("[%s] No GEMINI_API_KEY — mock mode active", name)
+            logger.warning("[%s] No API key or Vertex config found — mock mode active", name)
 
     # ------------------------------------------------------------------
     # ADK mandatory override

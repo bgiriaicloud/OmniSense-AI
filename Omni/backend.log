@@ -1,10 +1,249 @@
-INFO:     Started server process [7601]
+INFO:     Started server process [47114]
 INFO:     Waiting for application startup.
 INFO  visionguide.main  Initializing VisionGuide agents…
-INFO  visionguide.a2a  [VisionAgent] Gemini client ready (model=gemini-3-flash-preview)
-INFO  visionguide.a2a  [AudioAgent] Gemini client ready (model=gemini-3-flash-preview)
-INFO  visionguide.a2a  [NavAgent] Gemini client ready (model=gemini-3-flash-preview)
-INFO  visionguide.a2a  [Orchestrator] Gemini client ready (model=gemini-3-flash-preview)
+INFO  visionguide.cloud  GCP Cloud Logging initialized (setup_logging disabled for debugging).
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [VisionAgent] Gemini client ready (model=gemini-2.5-flash)
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [AudioAgent] Gemini client ready (model=gemini-2.5-flash)
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [NavAgent] Gemini client ready (model=gemini-2.5-flash)
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [Orchestrator] Gemini client ready (model=gemini-2.5-flash)
 INFO  visionguide.main  All agents online.
 INFO:     Application startup complete.
-INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:52472 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52496 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52498 - "OPTIONS /analyze/vision HTTP/1.1" 200 OK
+ERROR  visionguide.cloud  Failed to upload to GCS: 404 POST https://storage.googleapis.com/upload/storage/v1/b/visionguide-snapshots/o?uploadType=multipart: {
+  "error": {
+    "code": 404,
+    "message": "The specified bucket does not exist.",
+    "errors": [
+      {
+        "message": "The specified bucket does not exist.",
+        "domain": "global",
+        "reason": "notFound"
+      }
+    ]
+  }
+}
+: ('Request failed with status code', 404, 'Expected one of', <HTTPStatus.OK: 200>)
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:52544 - "POST /analyze/vision HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'I hear heavy, gurgling breathing sounds, consistent with deep snoring or possibly labored breathing from a nearby person.', 'urgency': 'Caution', 'guidance': 'A person nearby is making heavy, gurgling breathing sounds. While this could be deep snoring, gurgling can also indicate labored breathing. It would be prudent to visually check on the person to ensure they are comfortable and not in distress. If they are sleeping, be aware of their presence.'}
+INFO:     127.0.0.1:52549 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'I hear a continuous hissing or static sound, with very faint and muffled speech or indistinct voices overlaid. It is difficult to understand what is being said.', 'urgency': 'Caution', 'guidance': 'There are indistinct voices in the background, making it hard to discern specific words or the exact location of speakers. The static noise may also obscure other sounds. Please remain attentive to your visual surroundings to compensate for the unclear audio environment. If communication is needed, you may need to ask people to speak more clearly or closer.'}
+INFO:     127.0.0.1:52551 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A distinct, repetitive squeaking or creaking sound is present.', 'urgency': 'Caution', 'guidance': 'A repetitive squeaking or creaking sound suggests nearby movement or an object making noise. Please be attentive to your surroundings to identify the source of the sound.'}
+INFO:     127.0.0.1:52549 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A very brief, faint, and indistinct human vocalization, possibly a muffled utterance or part of a short conversation, is heard amidst a continuous, low-level ambient hum.', 'urgency': 'Caution', 'guidance': "Faint vocalizations indicate people are likely in the general vicinity. While the sound is indistinct, it's advisable to be aware of your surroundings and observe for visual cues, in case someone is attempting to communicate or if you are in a social setting."}
+INFO:     127.0.0.1:52552 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "A clear female voice is speaking, asking, 'Is it safe for me to navigate?'", 'urgency': 'Caution', 'guidance': 'Someone is directly asking you a question. You may want to respond to acknowledge their presence and address their query.'}
+INFO:     127.0.0.1:52551 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'There is a continuous, faint, low-frequency hum or rumble present in the background, which might be distant machinery or a vehicle. A single, soft thud is also heard at the very beginning of the audio.', 'urgency': 'Caution', 'guidance': 'Be aware that there are low background sounds, indicating some form of distant activity or machinery. Stay generally alert to your surroundings.'}
+INFO:     127.0.0.1:52556 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "A clear human voice is speaking, asking 'Is it safe for me to navigate?'. No other sounds or background noise are detected.", 'urgency': 'Safe', 'guidance': "It is quiet around you and I only hear your voice asking a question. Based on the audio, the environment appears safe to navigate. Can you provide more context about what you mean by 'navigate'?"}
+INFO:     127.0.0.1:52552 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'I hear very faint, indistinct human speech or mumbling, along with a low-level background hum or static. The speech is not clear enough to understand words.', 'urgency': 'Caution', 'guidance': "There are faint sounds that suggest someone might be speaking nearby. You may want to try to focus on the direction of the sound or increase your device's volume to try and understand if someone is trying to communicate with you."}
+INFO:     127.0.0.1:52557 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "A clear female voice is speaking directly to you, asking 'Is it safe for me to navigate?'. No other sounds are detected in the environment.", 'urgency': 'Safe', 'guidance': 'I hear a direct question being asked. You may want to respond to the person who is speaking.'}
+INFO:     127.0.0.1:52551 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A clear human voice is speaking directly to you, asking a question. It is quiet around you, with no other sounds detected in the background.', 'urgency': 'Safe', 'guidance': 'Someone is speaking directly to you and has asked a question. You may want to acknowledge them or respond to what they have said.'}
+INFO:     127.0.0.1:52556 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A very faint, rhythmic, low-frequency thumping or pulsing sound is present in the background. It is very quiet and muffled, almost like a distant machine or a subtle vibration.', 'urgency': 'Safe', 'guidance': 'The sounds are extremely subtle and do not indicate any immediate activity or danger in your surroundings. The area appears generally quiet, but be aware of the consistent, low-level background rhythm.'}
+INFO:     127.0.0.1:52558 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "A clear female voice is speaking, asking a question: 'Is it safe for me to navigate?' No other sounds or background noises are detected, indicating a quiet environment.", 'urgency': 'Safe', 'guidance': 'Someone is speaking directly to you, asking for information. You may want to respond to their question.'}
+INFO:     127.0.0.1:52552 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A clear human voice is speaking, asking a question. The background is quiet, with no other sounds detected.', 'urgency': 'Safe', 'guidance': 'The audio environment sounds quiet and clear, with no detected sounds that would indicate immediate concern or caution. You may proceed with navigation.'}
+INFO:     127.0.0.1:52557 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A clear female voice is speaking directly to you, asking, "Is it safe for me to navigate?" No other sounds are detected in the background.', 'urgency': 'Caution', 'guidance': 'Someone is speaking to you and asking a direct question. You may want to respond to the person who is talking.'}
+INFO:     127.0.0.1:52569 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A very faint, muffled, and indistinct sound is present. It resembles distant speech or a general background noise, but its source and nature are unclear.', 'urgency': 'Caution', 'guidance': "There is a very indistinct sound in the background. While it doesn't indicate immediate danger, you may want to try to focus and identify the source of this faint noise, or check if someone is trying to get your attention."}
+INFO:     127.0.0.1:52558 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'Muffled, indistinct speech is audible. It is difficult to understand what is being said or by whom due to the poor audio quality.', 'urgency': 'Caution', 'guidance': 'There are voices around you that are difficult to understand. You may be missing important information or someone might be trying to communicate with you. Consider turning towards the sound source or asking if someone is speaking.'}
+INFO:     127.0.0.1:52556 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'Faint, muffled, and indistinct background noise, possibly very distant low speech or a low hum, with a slight static quality. No clear or prominent sounds are detected.', 'urgency': 'Safe', 'guidance': "The current sound environment appears safe, with only very faint and indistinct background noises. While there's no immediate concern, if you are attempting to discern specific sounds or conversations, you may need to focus more intently or adjust your position to potentially hear more clearly."}
+INFO:     127.0.0.1:52569 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'Very faint, indistinct human speech or murmuring is audible in the background.', 'urgency': 'Caution', 'guidance': 'There are people nearby who are speaking. You may want to look around to identify the source of the voices or if anyone is trying to communicate with you.'}
+INFO:     127.0.0.1:52557 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A person is speaking clearly and continuously.', 'urgency': 'Caution', 'guidance': 'There is a person speaking near you. This speech could be directed at you or contain important information. You may want to face the speaker to aid in understanding or be prepared to respond.'}
+INFO:     127.0.0.1:52558 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A distinct, repetitive pulsing beeping sound is audible. It is a consistent electronic tone.', 'urgency': 'Caution', 'guidance': 'A beeping sound is present. This often indicates an alert, a notification, or a warning from a device or an appliance. Please try to identify the source of the beeping and what it might signify in your immediate environment.'}
+INFO:     127.0.0.1:52556 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'Clear human speech is detected. A person is speaking close by.', 'urgency': 'Caution', 'guidance': 'Someone is speaking near you. You may want to turn towards the speaker, acknowledge them, or ask for clarification if you cannot understand what is being said.'}
+INFO:     127.0.0.1:52573 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'There are very faint, indistinct human vocalizations or muffled speech in the background, too quiet to discern words.', 'urgency': 'Caution', 'guidance': 'There are faint sounds of someone speaking nearby, possibly in another room or at a distance. Be aware of your surroundings, as someone may be present in the vicinity.'}
+INFO:     127.0.0.1:52569 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'There is indistinct, muffled human speech present in the environment. It sounds like someone is speaking, but the words are not clear enough to understand.', 'urgency': 'Caution', 'guidance': 'Someone is speaking nearby, but their words are not discernible. You may want to check your surroundings or ask the person to repeat themselves if you are trying to communicate.'}
+INFO:     127.0.0.1:52557 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "I hear muffled, indistinct speech. It's difficult to make out any specific words or who is speaking, but it sounds like someone is vocalizing nearby.", 'urgency': 'Caution', 'guidance': 'There is muffled speech around you. You may want to turn towards the sound source to see if someone is attempting to communicate with you, or if it is general background conversation. Pay attention to any visual cues.'}
+INFO:     127.0.0.1:52585 - "POST /analyze/audio HTTP/1.1" 200 OK
+ERROR  visionguide.cloud  Failed to upload to GCS: 404 POST https://storage.googleapis.com/upload/storage/v1/b/visionguide-snapshots/o?uploadType=multipart: {
+  "error": {
+    "code": 404,
+    "message": "The specified bucket does not exist.",
+    "errors": [
+      {
+        "message": "The specified bucket does not exist.",
+        "domain": "global",
+        "reason": "notFound"
+      }
+    ]
+  }
+}
+: ('Request failed with status code', 404, 'Expected one of', <HTTPStatus.OK: 200>)
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:52958 - "POST /analyze/vision HTTP/1.1" 200 OK
+ERROR  visionguide.cloud  Failed to upload to GCS: 404 POST https://storage.googleapis.com/upload/storage/v1/b/visionguide-snapshots/o?uploadType=multipart: {
+  "error": {
+    "code": 404,
+    "message": "The specified bucket does not exist.",
+    "errors": [
+      {
+        "message": "The specified bucket does not exist.",
+        "domain": "global",
+        "reason": "notFound"
+      }
+    ]
+  }
+}
+: ('Request failed with status code', 404, 'Expected one of', <HTTPStatus.OK: 200>)
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:52958 - "POST /analyze/vision HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A clear female voice is speaking nearby. She says, "Okay, it\'s telling too much." There is a very faint, indeterminate background sound underneath her voice, but she is the primary sound source.', 'urgency': 'Caution', 'guidance': 'Someone is speaking clearly in your immediate vicinity. You may want to turn towards the speaker to engage with them, acknowledge their presence, or ask them to repeat if you missed any part of what they said.'}
+INFO:     127.0.0.1:52976 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A clear female voice is speaking. There are no other background sounds detected; the environment appears quiet.', 'urgency': 'Safe', 'guidance': 'Someone is speaking clearly nearby. If you are expecting a conversation, you may want to focus on their words. The area sounds calm and safe.'}
+INFO:     127.0.0.1:52978 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A clear female voice is speaking directly. No other sounds or background noise are detected.', 'urgency': 'Safe', 'guidance': 'Someone is speaking clearly and seems to be addressing you or having a conversation. You may want to listen closely or respond.'}
+INFO:     127.0.0.1:52979 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'I hear a clear female voice speaking, engaged in what sounds like a calm conversation. The environment appears to be an indoor setting.', 'urgency': 'Safe', 'guidance': 'Someone is speaking nearby. You may wish to turn to face the speaker to read their lips or acknowledge them if you are part of the conversation. The soundscape is calm and indicates no immediate concerns.'}
+INFO:     127.0.0.1:52976 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "A female voice is speaking clearly, saying 'for a user and just'. The speaking then stops abruptly, and it becomes quiet.", 'urgency': 'Safe', 'guidance': 'A person was speaking to you. If you were in a conversation, you may wish to respond. The speaking has now stopped, and the environment is currently quiet.'}
+INFO:     127.0.0.1:52978 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "A female voice clearly says 'okay', followed by some very faint, indistinct speech that quickly fades. It sounds like an indoor environment.", 'urgency': 'Safe', 'guidance': 'Someone is speaking nearby. You may want to acknowledge them or respond if you were expecting to communicate.'}
+INFO:     127.0.0.1:52979 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "There is clear human speech in the audio. A person is talking, saying 'for a user and just'.", 'urgency': 'Caution', 'guidance': 'Someone is speaking. You may want to focus your attention to understand what is being said, or be prepared to respond if they are addressing you.'}
+INFO:     127.0.0.1:52980 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "I hear two distinct click sounds, likely from a mouse or keyboard. A female voice speaks, first saying 'Okay' and then 'now.' These sounds suggest an indoor environment, possibly someone interacting with a computer.", 'urgency': 'Safe', 'guidance': 'The environment appears calm and safe, typical for someone actively using a computer or device. You may want to check if someone is trying to get your attention or if a task involving the computer is being initiated or completed.'}
+INFO:     127.0.0.1:52976 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "I hear clear human speech. A voice says 'Okay, now'. The environment otherwise appears quiet.", 'urgency': 'Safe', 'guidance': 'Someone is speaking clearly near you. You may want to listen to what they are saying or acknowledge them if they are addressing you.'}
+INFO:     127.0.0.1:52978 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "A female voice clearly says 'Okay, now'. There is also a very faint, almost imperceptible background hum or hiss.", 'urgency': 'Caution', 'guidance': 'A female voice is speaking directly to you. Pay attention as she may be trying to communicate something important or asking a question.'}
+INFO:     127.0.0.1:52981 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "A soft electronic click or tap, followed by a female voice speaking the words 'Okay' and then 'now'. The background environment is quiet.", 'urgency': 'Safe', 'guidance': 'Someone is speaking to you. You may want to acknowledge them or prepare for further interaction. The quiet environment is suitable for communication.'}
+INFO:     127.0.0.1:52979 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "I hear a distinct 'ding' sound, immediately followed by a continuous low-frequency humming or buzzing sound. This combination is characteristic of an elevator operating or arriving.", 'urgency': 'Caution', 'guidance': 'An elevator appears to be arriving or moving nearby. If you are waiting for an elevator, this could be its arrival. Be aware of the doors opening or movement if you are in the vicinity of an elevator shaft.'}
+INFO:     127.0.0.1:52980 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "I hear a clear human voice speaking. The words 'Okay, now' are discernible, suggesting someone is addressing you or preparing to continue speaking.", 'urgency': 'Caution', 'guidance': 'A person is speaking directly and audibly. You may wish to turn towards the sound or acknowledge their presence to understand the context of their speech.'}
+INFO:     127.0.0.1:52982 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A distinct service bell is ringing, followed by a soft thud.', 'urgency': 'Caution', 'guidance': 'Someone nearby is trying to get attention, possibly at a counter or service desk. Look around to see who might be ringing the bell and be prepared for an interaction.'}
+INFO:     127.0.0.1:52981 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "I hear a distinct 'ding' sound followed by a low-frequency hum and rumble, which then fades out. This is characteristic of an elevator operating, likely indicating it is arriving or departing.", 'urgency': 'Caution', 'guidance': 'An elevator appears to be operating nearby. Be aware of your immediate surroundings, as people may be entering or exiting, or the elevator car may be moving. If you are waiting for an elevator, this could be your signal.'}
+INFO:     127.0.0.1:52978 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "I hear a distinct 'ding' sound, immediately followed by a low-frequency humming or rumbling noise that then fades out. These sounds are highly consistent with an elevator, where the 'ding' often signals arrival or door action, and the hum relates to its movement or door mechanisms.", 'urgency': 'Caution', 'guidance': "You are hearing sounds consistent with an elevator operation. The 'ding' may indicate the elevator has arrived at your floor or its doors are opening/closing. Be aware of your immediate surroundings, as the elevator may be actively moving or its doors might be operating. If you are waiting for an elevator, this sound suggests it is near or has arrived."}
+INFO:     127.0.0.1:52980 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A distinct, resonant bell or chime sound is detected.', 'urgency': 'Caution', 'guidance': 'A bell or chime has just rung. This often indicates an alert, a service request, or a presence. You may want to look around to identify the source of the sound and its context.'}
+INFO:     127.0.0.1:52982 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "A distinct 'ding' sound is heard, similar to a bell or chime. This could indicate an elevator arriving, a doorbell, or a service bell.", 'urgency': 'Caution', 'guidance': "The 'ding' sound suggests an event that may require your attention. Please try to identify the source of the sound to understand what is happening and if any action is required."}
+INFO:     127.0.0.1:52981 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'A distinct chime followed by a low humming sound, consistent with an elevator either arriving or moving.', 'urgency': 'Caution', 'guidance': 'An elevator is nearby and active. Be aware of its presence, as the doors may be opening or closing soon, or it may be in motion. Plan your next steps accordingly.'}
+INFO:     127.0.0.1:52978 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "I hear a distinct 'ding' sound, immediately followed by a low, rumbling hum that then ceases. This sequence is characteristic of an elevator's arrival and operation.", 'urgency': 'Safe', 'guidance': 'An elevator has just arrived. You may anticipate doors opening shortly, and people potentially entering or exiting the space.'}
+INFO:     127.0.0.1:52986 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': "A distinct 'ding' or chime sound, similar to an elevator bell or a service bell, is heard.", 'urgency': 'Caution', 'guidance': 'A bell sound, such as an elevator arriving or a service call, suggests an event has occurred or attention is needed. You may want to check your surroundings or look for visual cues to understand its source and purpose.'}
+INFO:     127.0.0.1:52992 - "POST /analyze/audio HTTP/1.1" 200 OK

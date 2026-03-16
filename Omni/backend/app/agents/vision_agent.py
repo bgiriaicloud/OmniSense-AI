@@ -90,6 +90,17 @@ class VisionAgent(A2ABaseAgent):
             prompt += f"\n\nRespond in {lang_map.get(language, 'English')}."
 
         image_bytes = base64.b64decode(image_b64)
+        
+        # Upload to GCS for persistence/logging
+        from app.core.cloud_manager import cloud_manager
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        cloud_manager.upload_blob(
+            bucket_name="visionguide-snapshots",
+            source_data=image_bytes,
+            destination_blob_name=f"vision/{timestamp}.jpg"
+        )
+
         parts = [types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")]
         return await self._gemini_json(prompt, parts, schema)
 

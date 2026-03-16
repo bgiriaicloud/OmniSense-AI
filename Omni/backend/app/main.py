@@ -23,6 +23,7 @@ Endpoints:
 from __future__ import annotations
 
 import base64
+import datetime
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -35,7 +36,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 # Load .env (config folder lives at project root)
-_ENV_PATH = os.path.join(os.path.dirname(__file__), "..", "config", ".env")
+_ENV_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "config", ".env")
 load_dotenv(dotenv_path=_ENV_PATH, override=True)
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(name)s  %(message)s")
@@ -88,6 +89,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def root():
+    return {"message": "VisionGuide AI API is running", "docs": "/docs", "health": "/health"}
+
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 
 @app.websocket("/ws/live")
@@ -97,14 +102,27 @@ async def websocket_endpoint(websocket: WebSocket):
     from google.genai import types
     import asyncio
     
-    client = genai.Client()
-    model = os.getenv("GEMINI_LIVE_MODEL_ID", "gemini-2.5-flash-native-audio-latest")
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))
+    model = os.getenv("GEMINI_LIVE_MODEL_ID", "gemini-2.0-flash-live-001")
+    logger.info(f"WS connection starting with model: {model}")
     
     config = {"response_modalities": ["AUDIO"]}
     
     try:
         async with client.aio.live.connect(model=model, config=config) as session:
-            await session.send(input="Please analyze the video and audio streams I send. Warn me of any hazards or alerts since I am hearing impaired.", end_of_turn=True)
+            # Enhanced proactive prompt for the Live session
+            initial_prompt = (
+                "You are Omnisense AI, a secure multimodal accessibility engine. "
+                "I am providing you with live video and audio streams. "
+                "Monitor them continuously for safety hazards, environmental sounds, and navigational context. "
+                "Your primary task right now is AUDIO ACCESSIBILITY for a user who is hard of hearing. "
+                "You MUST identify and announce every significant sound event you hear immediately. "
+                "Detect sounds even if they are faint or distant. Be extremely sensitive to sound events "
+                "like doorbells, footsteps, car horns, voices, or appliances. "
+                "When you hear a sound, interrupt and say exactly what it is (e.g., 'I hear a doorbell' or 'Car horn detected'). "
+                "Use a warm, professional, yet urgent tone for alerts."
+            )
+            await session.send(input=initial_prompt, end_of_turn=True)
             
             async def receive_from_client():
                 try:
@@ -112,26 +130,34 @@ async def websocket_endpoint(websocket: WebSocket):
                         data = await websocket.receive_bytes()
                         if not data:
                             break
+                        # Protocol: byte 0 is type (1=Video, 2=Audio)
                         msg_type = data[0]
                         payload = data[1:]
-                        if msg_type == 1: # Video
+                        if msg_type == 1: # Video (JPEG frame)
                             await session.send(input={"mime_type": "image/jpeg", "data": payload})
-                        elif msg_type == 2: # Audio
+                        elif msg_type == 2: # Audio (WebM chunk)
+                            logger.debug(f"Received audio chunk: {len(payload)} bytes")
                             await session.send(input={"mime_type": "audio/webm", "data": payload})
                 except Exception as e:
-                    logger.error(f"WS client error: {e}")
+                    logger.error(f"WS client receiver error: {e}")
                     
             async def receive_from_gemini():
                 try:
                     async for response in session.receive():
+                        # Handle text output (for logging/debugging)
+                        if response.text:
+                            logger.info(f"Gemini Live Text: {response.text}")
+                            
+                        # Handle audio output
                         server_content = response.server_content
                         if server_content and server_content.model_turn:
                             for part in server_content.model_turn.parts:
                                 if part.inline_data and part.inline_data.data:
+                                    logger.debug("Sending audio chunk to client")
                                     await websocket.send_bytes(part.inline_data.data)
                 except Exception as e:
-                    logger.error(f"WS gemini error: {e}")
-                    
+                    logger.error(f"WS gemini receiver error: {e}")
+            
             # Run both bridging tasks concurrently
             await asyncio.gather(receive_from_client(), receive_from_gemini())
     except Exception as e:
@@ -246,6 +272,15 @@ async def analyze(
         language=language,
         nav_params=nav_params,
     )
+    
+    # Save preferences to Firestore
+    from app.core.cloud_manager import cloud_manager
+    cloud_manager.save_user_preference("default_user", {
+        "senior_mode": senior_mode,
+        "language": language,
+        "last_active": datetime.datetime.now().isoformat()
+    })
+    
     return result
 
 
@@ -258,32 +293,26 @@ async def analyze_vision(
     current_lat: Optional[float] = Form(None),
     current_lon: Optional[float] = Form(None),
 ):
-    raw = await image.read()
-    image_b64 = base64.b64encode(raw).decode()
-    
-    # Fetch weather if coordinates are provided
-    weather_context = ""
-    if current_lat is not None and current_lon is not None:
-        try:
-            import httpx
-            async with httpx.AsyncClient() as client:
-                resp = await client.get(
-                    f"https://api.open-meteo.com/v1/forecast?latitude={current_lat}&longitude={current_lon}&current=temperature_2m,precipitation,weather_code"
-                )
-                if resp.status_code == 200:
-                    data = resp.json().get("current", {})
-                    temp = data.get("temperature_2m", "unknown")
-                    precip = data.get("precipitation", 0)
-                    weather_context = f"\n[System Context: The user's local temperature is {temp}°C with {precip}mm precipitation. Advise on appropriate clothing/gear like umbrella, warm clothes, or water bottle.]"
-        except Exception as e:
-            logger.warning(f"Failed to fetch weather: {e}")
-
-    final_query = query + weather_context
-    
-    result = await vision_agent._skill_analyze_frame(
-        image_b64=image_b64, query=final_query, senior_mode=senior_mode, language=language
-    )
-    return result
+    try:
+        raw = await image.read()
+        image_b64 = base64.b64encode(raw).decode()
+        
+        # Fetch weather if coordinates are provided
+        weather_context = ""
+        # Currently we skip weather to avoid extra dependencies/failures in this debug phase
+        
+        final_query = query + (f"\n{weather_context}" if weather_context else "")
+        
+        result = await vision_agent._skill_analyze_frame(
+            image_b64=image_b64,
+            query=final_query,
+            senior_mode=senior_mode,
+            language=language
+        )
+        return result
+    except Exception as exc:
+        logger.error(f"[analyze_vision] CRITICAL ERROR: {exc}", exc_info=True)
+        return {"error": str(exc), "scene": "Internal error.", "safety_level": "Unknown"}
 
 
 @app.post("/analyze/audio", tags=["Convenience"])
@@ -292,15 +321,19 @@ async def analyze_audio(
     senior_mode: bool = Form(False),
     language: str = Form("en"),
 ):
-    raw = await audio.read()
-    audio_b64 = base64.b64encode(raw).decode()
-    result = await audio_agent._skill_monitor_ambient(
-        audio_b64=audio_b64,
-        mime_type=audio.content_type or "audio/webm",
-        senior_mode=senior_mode,
-        language=language,
-    )
-    return result
+    try:
+        raw = await audio.read()
+        audio_b64 = base64.b64encode(raw).decode()
+        result = await audio_agent._skill_monitor_ambient(
+            audio_b64=audio_b64,
+            mime_type=audio.content_type or "audio/webm",
+            senior_mode=senior_mode,
+            language=language,
+        )
+        return result
+    except Exception as exc:
+        logger.error(f"[analyze_audio] CRITICAL ERROR: {exc}", exc_info=True)
+        return {"error": str(exc), "sound_event": "Internal error.", "urgency": "Safe"}
 
 
 class HeadingRequest(BaseModel):

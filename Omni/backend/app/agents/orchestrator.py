@@ -126,6 +126,15 @@ class Orchestrator(A2ABaseAgent):
 
         spoken_guidance = " ".join(parts) if parts else "All clear — no hazards detected."
 
+        if hazard and hazard.lower() not in ("none detected", "no hazard info."):
+            from app.core.cloud_manager import cloud_manager
+            cloud_manager.publish_alert("hazard-alerts", {
+                "hazard": hazard,
+                "scene": scene,
+                "unified_safety": unified_safety,
+                "is_persistent": is_persistent
+            })
+
         merged = {
             "unified_safety": unified_safety,
             "scene": scene,

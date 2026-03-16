@@ -1,0 +1,135 @@
+INFO:     Will watch for changes in these directories: ['/Users/ipsita/project/Omni']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [25293] using WatchFiles
+INFO:     Started server process [25326]
+INFO:     Waiting for application startup.
+INFO  visionguide.main  Initializing VisionGuide agents…
+INFO  visionguide.cloud  GCP Cloud Logging initialized (setup_logging disabled for debugging).
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [VisionAgent] Gemini client ready (model=gemini-2.5-flash)
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [AudioAgent] Gemini client ready (model=gemini-2.5-flash)
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [NavAgent] Gemini client ready (model=gemini-2.5-flash)
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [Orchestrator] Gemini client ready (model=gemini-2.5-flash)
+INFO  visionguide.main  All agents online.
+INFO:     Application startup complete.
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54237 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54307 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54309 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54307 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54310 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54309 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54311 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54310 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54312 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54309 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54311 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54313 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54310 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54312 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54325 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54313 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54325 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54312 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54313 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54341 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54325 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54312 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54342 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+WARNING:  WatchFiles detected changes in 'backend/app/agents/audio_agent.py'. Reloading...
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54313 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54341 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54343 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54342 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54312 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO  visionguide.main  Shutdown complete.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [25326]
+INFO:     Started server process [25883]
+INFO:     Waiting for application startup.
+INFO  visionguide.main  Initializing VisionGuide agents…
+INFO  visionguide.cloud  GCP Cloud Logging initialized (setup_logging disabled for debugging).
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [VisionAgent] Gemini client ready (model=gemini-2.5-flash)
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [AudioAgent] Gemini client ready (model=gemini-2.5-flash)
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [NavAgent] Gemini client ready (model=gemini-2.5-flash)
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [Orchestrator] Gemini client ready (model=gemini-2.5-flash)
+INFO  visionguide.main  All agents online.
+INFO:     Application startup complete.
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'No significant sound events detected', 'urgency': 'Safe', 'guidance': 'The immediate environment appears quiet regarding specific alerts. No distinct doorbells, sirens, vehicles, or voices were identified. Remain attentive to visual cues and other senses.'}
+INFO:     127.0.0.1:54366 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO  google_genai.models  AFC is enabled with max remote calls: 10.
+INFO  httpx  HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+INFO  visionguide.audio  [AudioAgent] Result: {'sound_event': 'Bicycle bell', 'urgency': 'Caution', 'guidance': 'A bicycle is likely approaching from behind or nearby. Be aware of your surroundings and consider moving to the side if on a shared path.'}
+INFO:     127.0.0.1:54371 - "POST /analyze/audio HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO  visionguide.main  Shutdown complete.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [25883]
+INFO:     Stopping reloader process [25293]

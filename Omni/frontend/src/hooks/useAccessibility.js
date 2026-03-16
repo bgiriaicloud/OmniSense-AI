@@ -27,23 +27,59 @@ export const useAccessibility = () => {
     const liveSocketRef = useRef(null);
     const audioContextRef = useRef(null);
 
+    // --- AudioContext Management ---
+    const resumeAudioContext = useCallback(async () => {
+        if (!audioContextRef.current) {
+            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioContextRef.current.state === 'suspended') {
+            console.log("Resuming AudioContext...");
+            await audioContextRef.current.resume();
+        }
+    }, []);
+
     // --- Speech Synthesis ---
+    // Use refs to manage speech queuing and prevent cancel-race conditions
+    const speechQueueRef = useRef([]);
+    const isSpeakingRef = useRef(false);
+
+    const processQueue = useCallback(() => {
+        if (isSpeakingRef.current || speechQueueRef.current.length === 0) return;
+        const { text, lang } = speechQueueRef.current.shift();
+        const synth = window.speechSynthesis;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;
+        isSpeakingRef.current = true;
+        utterance.onend = () => { isSpeakingRef.current = false; processQueue(); };
+        utterance.onerror = (e) => { isSpeakingRef.current = false; if (e.error !== 'canceled') processQueue(); };
+        synth.speak(utterance);
+    }, []);
+
     const speak = useCallback((text) => {
         if (!text) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
+        const synth = window.speechSynthesis;
+        const langMap = { 'en': 'en-US', 'fr': 'fr-FR', 'hi': 'hi-IN', 'or': 'or-IN' };
+        const lang = langMap[language] || 'en-US';
 
-        // Map app language to BCP47
-        const langMap = {
-            'en': 'en-US',
-            'fr': 'fr-FR',
-            'hi': 'hi-IN',
-            'or': 'or-IN'
+        const doSpeak = () => {
+            // Replace any pending speech with this new (more important) message
+            speechQueueRef.current = [{ text, lang }];
+            isSpeakingRef.current = false;
+            synth.cancel();
+            // Small delay after cancel() to let the browser process it
+            setTimeout(() => processQueue(), 80);
         };
-        utterance.lang = langMap[language] || 'en-US';
 
-        window.speechSynthesis.speak(utterance);
-    }, [language]);
+        if (synth.getVoices().length === 0) {
+            // Voices not ready — wait for them
+            const handler = () => { synth.onvoiceschanged = null; doSpeak(); };
+            synth.onvoiceschanged = handler;
+            // Fallback in case onvoiceschanged never fires (some browsers)
+            setTimeout(doSpeak, 1000);
+        } else {
+            doSpeak();
+        }
+    }, [language, processQueue]);
 
     // --- Camera Initialization ---
     const initCamera = useCallback(async () => {
@@ -101,16 +137,15 @@ export const useAccessibility = () => {
         }
     }, [speak]);
 
-    const handleStartSystems = useCallback((profile = 'vision') => {
+    const handleStartSystems = useCallback(async (profile = 'vision') => {
         setHasStarted(true);
         setSensoryProfile(profile);
+        await resumeAudioContext();
         initCamera();
         initMic();
-        const greeting = profile === 'hearing'
-            ? "OmniSense systems initialized. Visual alerts are active."
-            : "OmniSense systems initialized. How can I help you today?";
-        speak(greeting);
-    }, [initCamera, initMic, speak]);
+        // Greeting is spoken by App.jsx to avoid double-cancel race
+    }, [initCamera, initMic, resumeAudioContext]);
+
 
     // --- API Interactions ---
     const analyzeScene = useCallback(async (base64Image, query = "Describe my surroundings.") => {
@@ -398,9 +433,14 @@ export const useAccessibility = () => {
     const startLiveStream = useCallback(async () => {
         if (isLiveStreaming) return;
 
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.host;
-        const socket = new WebSocket(`${protocol}//${host}/ws/live`);
+        await resumeAudioContext();
+
+        const wsBase = API_BASE.replace(/^http/, 'ws');
+        // Ensure we use the same host as API_BASE but with websocket protocol
+        const socketUrl = `${wsBase}/ws/live`;
+        console.log("Connecting to Live Stream WebSocket:", socketUrl);
+
+        const socket = new WebSocket(socketUrl);
         liveSocketRef.current = socket;
         setIsLiveStreaming(true);
 
@@ -480,10 +520,8 @@ export const useAccessibility = () => {
         setIsLiveStreaming(false);
     }, []);
 
-    const playLiveAudio = (arrayBuffer) => {
-        if (!audioContextRef.current) {
-            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-        }
+    const playLiveAudio = async (arrayBuffer) => {
+        await resumeAudioContext();
         const ctx = audioContextRef.current;
 
         // Gemini returns 24kHz Mono PCM16

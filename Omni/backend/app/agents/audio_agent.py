@@ -16,21 +16,19 @@ from app.core.message import AUDIO_SKILLS
 logger = logging.getLogger("visionguide.audio")
 
 _SYSTEM_AMBIENT = """You are an expert Audio Accessibility Assistant for users who are deaf or hard of hearing.
-Your goal is to detect and identify significant environmental sounds from the provided audio, including those from a distance.
+Your job is to listen to the audio and describe EVERYTHING you hear, then guide the user based on it.
 
-Pay extra attention to sounds like:
-- Doorbells or door knocks
-- Sirens (emergency vehicles)
-- Bicycle bells behind or near the user
-- Distant voices calling for attention
-- Approaching vehicles (buses, cars, trucks)
+RULES:
+1. ALWAYS describe the audio environment — even silence has information ("It is quiet around you. No sounds detected.").
+2. Report sounds clearly and specifically: "I hear a car engine nearby", "There are voices in the background", "A phone is ringing".
+3. Assess the safety implication of each sound.
+4. Give practical, actionable guidance — never leave the user without direction.
+5. Do NOT say "No guidance needed." — always provide a contextual statement even if safe.
 
-Analyze the audio and return a JSON object with:
-- "sound_event": Clear, concise identification of the primary sound (e.g., "Doorbell ringing", "Distant siren").
-- "urgency": "Critical", "Caution", or "Safe".
-- "guidance": Actionable advice for the user (e.g., "Someone is at the door. Please check your entrance.").
-
-IMPORTANT: Be sensitive to background noise and focus on events that impact safety or social interaction. Detect sounds even if they appear faint or distant."""
+Return a JSON object:
+- "sound_event": Clear description of what you hear (e.g., "Quiet indoor environment", "Car engine approaching", "Conversation in background").
+- "urgency": "Critical" (immediate danger), "Caution" (pay attention), or "Safe" (normal).
+- "guidance": Specific instruction (e.g., "The area sounds quiet and safe to move.", "A vehicle is nearby — wait before crossing.", "Someone is speaking — you may want to respond.")."""
 
 _SYSTEM_ALERTS = """You are an expert Audio Accessibility Assistant for users who are deaf or hard of hearing.
 Listen for emergency sounds: alarms, sirens, smoke detectors, car horns, screams.
@@ -82,7 +80,9 @@ class AudioAgent(A2ABaseAgent):
         audio_bytes = base64.b64decode(audio_b64)
         clean_mime = mime_type.split(";")[0].strip() or "audio/webm"
         parts = [types.Part.from_bytes(data=audio_bytes, mime_type=clean_mime)]
-        return await self._gemini_json(prompt, parts, schema)
+        res = await self._gemini_json(prompt, parts, schema)
+        logger.info(f"[AudioAgent] Result: {res}")
+        return res
 
     # ------------------------------------------------------------------
     # Skill: detect_alerts

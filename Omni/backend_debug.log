@@ -1,0 +1,17 @@
+INFO:     Will watch for changes in these directories: ['/Users/ipsita/project/Omni']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [29455] using WatchFiles
+INFO:     Started server process [29490]
+INFO:     Waiting for application startup.
+INFO  visionguide.main  Initializing VisionGuide agents…
+INFO  visionguide.cloud  GCP Cloud Logging initialized (setup_logging disabled for debugging).
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [VisionAgent] Gemini client ready (model=gemini-2.5-flash)
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [AudioAgent] Gemini client ready (model=gemini-2.5-flash)
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [NavAgent] Gemini client ready (model=gemini-2.5-flash)
+WARNING  google_genai._api_client  Both GOOGLE_API_KEY and GEMINI_API_KEY are set. Using GOOGLE_API_KEY.
+INFO  visionguide.a2a  [Orchestrator] Gemini client ready (model=gemini-2.5-flash)
+INFO  visionguide.main  All agents online.
+INFO:     Application startup complete.

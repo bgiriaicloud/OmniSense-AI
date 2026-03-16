@@ -1,0 +1,14 @@
+
+> frontend@0.0.0 dev
+> vite
+
+Port 5173 is in use, trying another one...
+
+  VITE v5.4.21  ready in 131 ms
+
+  ➜  Local:   http://localhost:5174/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+10:39:33 AM [vite] hmr update /src/App.jsx, /src/index.css
+10:47:44 AM [vite] hmr update /src/App.jsx, /src/index.css
+10:56:31 AM [vite] hmr update /src/App.jsx, /src/index.css
